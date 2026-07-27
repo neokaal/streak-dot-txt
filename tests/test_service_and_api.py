@@ -41,6 +41,14 @@ def test_repository_rejects_path_traversal(service):
         service.get_streak("../private")
 
 
+def test_repository_lists_legacy_safe_filename_ids(service):
+    directory = service.repository.directory
+    directory.mkdir(parents=True)
+    (directory / "streak-Morning_Walk.txt").write_text("---\nname: Morning Walk\ntick: Daily\n---\n")
+    assert service.repository.list_ids() == ["Morning_Walk"]
+    assert service.get_streak("Morning_Walk").name == "Morning Walk"
+
+
 def test_archive_is_recoverable(service):
     streak_id, _ = service.create_streak("Archive me")
     service.archive_streak(streak_id)
