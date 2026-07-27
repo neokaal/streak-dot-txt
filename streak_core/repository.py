@@ -21,9 +21,6 @@ class InvalidStreakIdError(ValueError):
 class StreakRepository:
     """Owns filename resolution and durable persistence for one streak directory."""
 
-    # Existing streak.txt collections may predate slug IDs. Permit the safe,
-    # filename-compatible legacy forms while still rejecting paths and dots.
-    _id_pattern = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 
     def __init__(self, directory: str | Path):
         self.directory = Path(directory).expanduser()
@@ -36,8 +33,11 @@ class StreakRepository:
         return slug
 
     def _validate_id(self, streak_id: str) -> str:
-        if not self._id_pattern.fullmatch(streak_id):
-            raise InvalidStreakIdError("Streak IDs may contain only letters, numbers, hyphens, and underscores")
+        # IDs are incorporated into a filename. Existing files can have names
+        # made before slug IDs existed, so retain every single safe path
+        # component rather than silently hiding a user's streak.
+        if not streak_id or streak_id in {".", ".."} or "/" in streak_id or "\\" in streak_id or "\x00" in streak_id:
+            raise InvalidStreakIdError("Streak ID must be a single filename component")
         return streak_id
 
     def path_for(self, streak_id: str) -> Path:

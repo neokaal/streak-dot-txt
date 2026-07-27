@@ -49,6 +49,13 @@ def test_repository_lists_legacy_safe_filename_ids(service):
     assert service.get_streak("Morning_Walk").name == "Morning Walk"
 
 
+def test_repository_lists_legacy_filename_ids_with_spaces(service):
+    directory = service.repository.directory
+    directory.mkdir(parents=True)
+    (directory / "streak-Reading (evening).txt").write_text("---\nname: Reading\ntick: Daily\n---\n")
+    assert service.get_streak("Reading (evening)").name == "Reading"
+
+
 def test_archive_is_recoverable(service):
     streak_id, _ = service.create_streak("Archive me")
     service.archive_streak(streak_id)
