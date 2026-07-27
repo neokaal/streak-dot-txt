@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Streak.txt</title><link rel="stylesheet" href="/static/app.css"><script src="https://unpkg.com/htmx.org@2.0.4"></script></head>
+<body><main><header><p class="eyebrow">STREAK.TXT</p><h1>Today’s practice.</h1><p class="muted">One honest tick at a time.</p></header>
+<section class="new"><h2>Start a streak</h2><form method="post" action="/ui/streaks"><label>Name <input required name="name" placeholder="Morning walk"></label><label>Cadence <select name="tick_type"><option>Daily</option><option>Weekly</option></select></label><label>Description <input name="description" placeholder="Optional"></label><button>Create streak</button></form></section>
+<section><div class="section-heading"><h2>Your streaks</h2><span>{{ streaks|length }} total</span></div><div class="cards">{% for streak_id, streak in streaks %}{% include "partials/streak_card.html" %}{% else %}<p class="empty">No streaks yet. Start with one small practice.</p>{% endfor %}</div></section></main></body>
+</html>

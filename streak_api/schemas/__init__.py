@@ -28,6 +28,7 @@ class TickResponse(BaseModel):
 
 
 class StreakResponse(BaseModel):
+    id: str
     name: str
     tick_type: str
     description: Optional[str] = None
@@ -37,7 +38,7 @@ class StreakResponse(BaseModel):
     years: List[int] = []
 
     @classmethod
-    def from_streak(cls, streak):
+    def from_streak(cls, streak, streak_id: str):
         """Convert streak_core Streak object to API response"""
         tick_responses = []
         for tick in streak.ticks:
@@ -53,6 +54,7 @@ class StreakResponse(BaseModel):
             )
 
         return cls(
+            id=streak_id,
             name=streak.name or "Unnamed Streak",
             tick_type=streak.tick,
             description=streak.metadata.get("description"),

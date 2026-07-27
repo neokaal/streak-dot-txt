@@ -6,3 +6,6 @@ coverage
 fastapi
 uvicorn[standard]
 python-multipart
+Jinja2
+pytest
+httpx

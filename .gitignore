@@ -172,3 +172,10 @@ cython_debug/
 
 # macos files
 .DS_Store
+
+# Desktop build dependencies and per-platform package artifacts
+desktop/node_modules/
+desktop/src-tauri/target/
+desktop/src-tauri/binaries/
+desktop/dist/
+desktop/*.spec
