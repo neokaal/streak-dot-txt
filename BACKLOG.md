@@ -22,7 +22,7 @@ checked here until they are moved into release notes or archived.
 - [x] Replace the fixed desktop server port with a dynamically selected port.
 - [x] Verify the identity and readiness of the Streak.txt sidecar before redirecting the desktop shell.
 - [x] Add a bounded startup timeout and surface useful sidecar startup errors in the desktop window.
-- [ ] Reduce first-launch latency caused by the one-file sidecar bundle.
+- [ ] Reduce cold first-launch latency for the packaged desktop sidecar.
 
 ### Local Application Security
 
@@ -56,6 +56,7 @@ checked here until they are moved into release notes or archived.
 
 ### Packaging and Releases
 
+- [x] Provide Makefile targets for installation, running, testing, checking, building, releasing, distributing, benchmarking, and cleanup.
 - [x] Provide packaging entry points that work on macOS, Linux, and Windows without assuming Unix shell paths and tools.
 - [x] Separate runtime, test, and packaging dependencies and lock versions for reproducible builds.
 - [x] Establish a release-version update process covering the Python package, Cargo package, Tauri configuration, and generated artifacts.

@@ -26,15 +26,14 @@ from streak_api.schemas import (
     StreakUpdate,
     TickCreate,
 )
-from streak_core import (
-    DuplicateTickError,
+from streak_core.constants import resolve_streaks_dir
+from streak_core.repository import (
     InvalidStreakIdError,
     StreakNotFoundError,
     StreakRepository,
-    StreakService,
-    __version__,
-    resolve_streaks_dir,
 )
+from streak_core.services import DuplicateTickError, StreakService
+from streak_core.version import __version__
 
 BASE_DIR = Path(__file__).parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))

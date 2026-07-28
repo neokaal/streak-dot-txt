@@ -4,21 +4,24 @@ This is a thin Tauri wrapper around the bundled local FastAPI application.
 The repository [`README.md`](../README.md) is the authoritative guide for
 installation, development, testing, packaging, and version updates.
 
-Cross-platform Python entry points:
+Routine targets from the repository root:
 
 ```bash
 # Development window
-.env/bin/python desktop/run_local.py
+make run-desktop
 
 # Native bundles for the current OS
-.env/bin/python desktop/package_release.py
+make distribute
 
 # macOS .app only, without Finder-based DMG layout automation
-.env/bin/python desktop/package_release.py --bundles app
+make release-app
+
+# Isolated sidecar startup measurement
+make benchmark-startup
 ```
 
-The shell wrappers in this directory are Unix conveniences around those Python
-entry points.
+The Make targets call cross-platform Python entry points in this directory.
+Those scripts can also be invoked directly on systems without `make`.
 
 Release builds use `~/streaks`, choose a free loopback port, verify that they
 connected to the sidecar from the current launch, and terminate that process on

@@ -13,5 +13,8 @@ if __name__ == "__main__":
         "streak_api.main:app",
         host="127.0.0.1",
         port=port,
+        http="h11",
+        loop="asyncio",
         log_level="warning",
+        ws="none",
     )

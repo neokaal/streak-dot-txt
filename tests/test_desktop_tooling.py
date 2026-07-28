@@ -1,9 +1,10 @@
 import os
+from pathlib import Path
 import sys
 
 import pytest
 
-from desktop import package_release, package_sidecar
+from desktop import measure_startup, package_release, package_sidecar
 from scripts.set_version import set_version
 
 
@@ -22,6 +23,15 @@ def test_sidecar_builder_uses_the_active_python_and_platform_data_separator(
     command, options = calls[0]
     assert command[:3] == [sys.executable, "-m", "PyInstaller"]
     assert "--onedir" in command
+    for excluded_module in (
+        "PIL",
+        "rich",
+        "tkinter",
+        "uvloop",
+        "watchfiles",
+        "websockets",
+    ):
+        assert excluded_module in command
     assert any(
         argument.endswith(f"{os.pathsep}streak_api/templates")
         for argument in command
@@ -80,3 +90,60 @@ def test_release_builder_copies_the_target_sidecar_and_forwards_bundle_choice(
 def test_version_updater_rejects_non_semantic_versions_without_writing():
     with pytest.raises(ValueError, match="semantic version"):
         set_version("release-next")
+
+
+def test_startup_measurement_uses_an_isolated_streak_directory(
+    tmp_path,
+    monkeypatch,
+):
+    sidecar = tmp_path / "sidecar"
+    sidecar.write_bytes(b"binary")
+    captured = {}
+
+    class FakeProcess:
+        returncode = None
+
+        def poll(self):
+            return self.returncode
+
+        def terminate(self):
+            self.returncode = 0
+
+        def wait(self, timeout=None):
+            return self.returncode
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return None
+
+        def read(self):
+            return b"test-token"
+
+    def fake_popen(command, **options):
+        captured["command"] = command
+        captured["environment"] = options["env"]
+        return FakeProcess()
+
+    monkeypatch.setattr(measure_startup, "available_port", lambda: 8765)
+    monkeypatch.setattr(
+        measure_startup.secrets,
+        "token_hex",
+        lambda _: "test-token",
+    )
+    monkeypatch.setattr(measure_startup.subprocess, "Popen", fake_popen)
+    monkeypatch.setattr(
+        measure_startup.urllib.request,
+        "urlopen",
+        lambda request, timeout: FakeResponse(),
+    )
+
+    elapsed = measure_startup.measure_startup(sidecar)
+
+    assert elapsed >= 0
+    assert captured["command"] == [str(sidecar)]
+    streaks_directory = Path(captured["environment"]["STREAKS_DIR"])
+    assert streaks_directory.name == "streaks"
+    assert "streak-startup-" in str(streaks_directory)

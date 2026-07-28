@@ -21,14 +21,17 @@ temporary directories and do not touch `~/streaks`.
 
 ## Install for development
 
-Create a virtual environment and install the locked development dependencies:
+Create a virtual environment, then use the Make targets for routine work:
 
 ```bash
 python3 -m venv .env
-.env/bin/python -m pip install -c requirements.lock -r requirements-dev.txt
+make install
+make check
 ```
 
 On Windows, use `.env\Scripts\python` in place of `.env/bin/python`.
+If `make` is unavailable, each target expands to the Python, Cargo, or npm
+command documented below it in `Makefile`.
 
 The dependency sets are:
 
@@ -42,14 +45,13 @@ The dependency sets are:
 CLI:
 
 ```bash
-.env/bin/python streakdottxt.py --help
-.env/bin/python streakdottxt.py list
+make run-cli
 ```
 
 Local web application and API:
 
 ```bash
-.env/bin/python run_api.py
+make run-api
 ```
 
 Then open `http://127.0.0.1:8000`. API documentation is available at
@@ -64,7 +66,7 @@ Legacy Tkinter interface:
 Tauri desktop development window:
 
 ```bash
-.env/bin/python desktop/run_local.py
+make run-desktop
 ```
 
 The desktop command starts and stops the local API with the Tauri process.
@@ -75,12 +77,15 @@ launcher.
 ## Test
 
 ```bash
-.env/bin/python -m pytest -q
-cd desktop/src-tauri && cargo test
+make test
+make check
+make coverage
 ```
 
-For a coverage report, put the virtual environment first on `PATH` and run
-`./run_tests.sh`.
+`make check` runs Python and Rust tests, Python compilation, dependency checks,
+Rust formatting validation, and a release-mode Rust check. To build and measure
+the packaged sidecar against temporary streak data, run
+`make benchmark-startup`.
 
 Tests that use streak files receive a unique temporary directory. No automated
 test should use the normal `~/streaks` directory.
@@ -90,15 +95,13 @@ test should use the normal `~/streaks` directory.
 Install the pinned build dependencies first:
 
 ```bash
-.env/bin/python -m pip install -c requirements.lock -r requirements-build.txt
-cd desktop
-npm ci
+make install
 ```
 
 Build the native bundles for the current operating system:
 
 ```bash
-.env/bin/python desktop/package_release.py
+make distribute
 ```
 
 Run that command from the repository root. Windows uses the same Python script
@@ -109,7 +112,7 @@ On macOS, build only the `.app` without invoking Finder-based DMG layout
 automation:
 
 ```bash
-.env/bin/python desktop/package_release.py --bundles app
+make release-app
 ```
 
 The default build asks Tauri for all configured bundles, including DMG on
@@ -119,6 +122,14 @@ macOS. Resulting installers are placed under
 The packaged sidecar chooses a free loopback port, verifies a per-launch
 identity token, and is terminated when Tauri exits. If startup fails, the
 desktop window displays the path to `sidecar.log`.
+
+Useful release targets:
+
+- `make build`: compile Python and the release-mode Rust shell without bundling.
+- `make build-sidecar`: build only the embedded Python server.
+- `make release-app`: verify and build the macOS `.app` without Finder automation.
+- `make distribute`: verify and build every configured installer for the current OS.
+- `make clean`: remove only known generated build and coverage directories.
 
 ## Release version
 
