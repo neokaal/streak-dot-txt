@@ -21,14 +21,19 @@ def test_sidecar_builder_uses_the_active_python_and_platform_data_separator(
 
     command, options = calls[0]
     assert command[:3] == [sys.executable, "-m", "PyInstaller"]
-    assert "--onefile" in command
+    assert "--onedir" in command
     assert any(
         argument.endswith(f"{os.pathsep}streak_api/templates")
         for argument in command
     )
     assert options["check"] is True
     expected_suffix = ".exe" if os.name == "nt" else ""
-    assert result.name == f"streak-server{expected_suffix}"
+    assert result == (
+        package_sidecar.DESKTOP_DIR
+        / "dist"
+        / "streak-server"
+        / f"streak-server{expected_suffix}"
+    )
 
 
 def test_release_builder_copies_the_target_sidecar_and_forwards_bundle_choice(
@@ -36,8 +41,13 @@ def test_release_builder_copies_the_target_sidecar_and_forwards_bundle_choice(
     monkeypatch,
 ):
     desktop_directory = tmp_path / "desktop"
-    sidecar = tmp_path / ("streak-server.exe" if os.name == "nt" else "streak-server")
+    sidecar_directory = tmp_path / "built-sidecar"
+    sidecar_directory.mkdir()
+    sidecar = sidecar_directory / (
+        "streak-server.exe" if os.name == "nt" else "streak-server"
+    )
     sidecar.write_bytes(b"sidecar")
+    (sidecar_directory / "support-library").write_bytes(b"support")
     calls = []
 
     monkeypatch.setattr(package_release, "DESKTOP_DIR", desktop_directory)
@@ -49,16 +59,16 @@ def test_release_builder_copies_the_target_sidecar_and_forwards_bundle_choice(
         lambda command, **kwargs: calls.append((command, kwargs)),
     )
 
-    package_release.build_release("test-platform", "app")
+    package_release.build_release("app")
 
-    suffix = ".exe" if os.name == "nt" else ""
-    copied = (
+    copied_directory = (
         desktop_directory
         / "src-tauri"
-        / "binaries"
-        / f"streak-server-test-platform{suffix}"
+        / "resources"
+        / "sidecar"
     )
-    assert copied.read_bytes() == b"sidecar"
+    assert (copied_directory / sidecar.name).read_bytes() == b"sidecar"
+    assert (copied_directory / "support-library").read_bytes() == b"support"
     assert calls == [
         (
             ["npm", "run", "build", "--", "--bundles", "app"],

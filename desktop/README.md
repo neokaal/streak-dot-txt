@@ -25,6 +25,6 @@ connected to the sidecar from the current launch, and terminate that process on
 exit. Startup failures are shown in the window with the platform-specific
 location of `sidecar.log`.
 
-PyInstaller currently produces a single-file sidecar. Its extraction makes the
-first launch after installation slower than later launches; changing that
-layout requires a packaged-app verification pass on each target platform.
+PyInstaller produces a directory-based sidecar that Tauri bundles as an
+application resource. Keeping the interpreter support files beside the
+executable avoids the extraction delay of a one-file sidecar.

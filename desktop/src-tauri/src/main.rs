@@ -15,6 +15,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 #[cfg(not(debug_assertions))]
+use tauri::path::BaseDirectory;
+#[cfg(not(debug_assertions))]
 use tauri::Manager;
 
 #[cfg(any(not(debug_assertions), test))]
@@ -85,11 +87,15 @@ fn start_local_server(
     app: &tauri::App,
     state: SidecarState,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let executable = std::env::current_exe()?;
-    let sidecar = executable
-        .parent()
-        .ok_or("unable to find the Streak.txt application directory")?
-        .join("streak-server");
+    let executable_name = if cfg!(windows) {
+        "streak-server.exe"
+    } else {
+        "streak-server"
+    };
+    let sidecar = app.path().resolve(
+        format!("sidecar/{executable_name}"),
+        BaseDirectory::Resource,
+    )?;
 
     let log_directory = app.path().app_log_dir()?;
     fs::create_dir_all(&log_directory)?;

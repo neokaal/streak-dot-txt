@@ -5,5 +5,12 @@
   "identifier": "in.neolateral.streaktxt",
   "build": { "frontendDist": "../web-shell", "devUrl": "http://127.0.0.1:8000" },
   "app": { "windows": [{ "title": "Streak.txt", "width": 960, "height": 720, "minWidth": 420, "minHeight": 560 }] },
-  "bundle": { "active": true, "targets": "all", "icon": [], "externalBin": ["binaries/streak-server"] }
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [],
+    "resources": {
+      "resources/sidecar/": "sidecar/"
+    }
+  }
 }

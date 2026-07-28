@@ -177,5 +177,6 @@ cython_debug/
 desktop/node_modules/
 desktop/src-tauri/target/
 desktop/src-tauri/binaries/
+desktop/src-tauri/resources/sidecar/
 desktop/dist/
 desktop/*.spec

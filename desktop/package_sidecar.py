@@ -20,7 +20,7 @@ def build_sidecar() -> Path:
         "PyInstaller",
         "--noconfirm",
         "--clean",
-        "--onefile",
+        "--onedir",
         "--name",
         "streak-server",
         "--paths",
@@ -39,7 +39,7 @@ def build_sidecar() -> Path:
     ]
     subprocess.run(command, check=True, cwd=PROJECT_ROOT)
     suffix = ".exe" if os.name == "nt" else ""
-    return output_directory / f"streak-server{suffix}"
+    return output_directory / "streak-server" / f"streak-server{suffix}"
 
 
 if __name__ == "__main__":
