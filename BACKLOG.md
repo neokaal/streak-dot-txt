@@ -84,21 +84,21 @@ checked here until they are moved into release notes or archived.
 - [x] Generate and configure production application icons for macOS and Windows.
 - [x] Finalize bundle metadata, including the application identifier, displayed version, and minimum supported macOS version.
 - [x] Restrict initial release artifacts to a macOS Apple Silicon DMG and a Windows x64 NSIS installer.
-- [ ] Add a GitHub Actions workflow that runs checks, builds each platform's native Python sidecar, and creates a draft GitHub Release from a version tag.
+- [x] Add a GitHub Actions workflow that runs checks, builds each platform's native Python sidecar, and creates a draft GitHub Release from a version tag.
 - [ ] Generate and attach SHA-256 checksums for every release artifact.
 - [x] Keep the initial open-source release independent of corporate Apple signing credentials.
-- [ ] Verify the unsigned macOS DMG installs through the documented Gatekeeper override.
+- [x] Verify the unsigned macOS DMG installs through the documented Gatekeeper override.
 - [x] Document supported platforms, installation, the streak data location, and the expected macOS Gatekeeper and Windows SmartScreen warnings.
 - [x] Document the tag-to-draft-to-publish release workflow for maintainers.
-- [ ] Create `CHANGELOG.md` in the established Semantic Versioning format and add the initial `0.1.0` release entry.
+- [x] Create `CHANGELOG.md` in the established Semantic Versioning format and add the initial `0.1.0` release entry.
 
 ### Release Checklist - Copy Into Every Release
 
 - [ ] Confirm the release scope is complete and all intended backlog items are checked.
-- [ ] Update the version everywhere using the repository's version-update process.
-- [ ] Add the completed release at the top of `CHANGELOG.md` with its version, release date, maintainer, and concise user-facing changes.
-- [ ] Update user-facing documentation and prepare concise GitHub release notes from the changelog entry.
-- [ ] Run the complete automated check suite from a clean working tree.
+- [x] Update the version everywhere using the repository's version-update process.
+- [x] Add the completed release at the top of `CHANGELOG.md` with its version, release date, maintainer, and concise user-facing changes.
+- [x] Update user-facing documentation and prepare concise GitHub release notes from the changelog entry.
+- [x] Run the complete automated check suite from a clean working tree.
 - [ ] Push the release commit and create the matching version tag.
 - [ ] Confirm GitHub Actions produces the macOS Apple Silicon DMG, Windows x64 installer, and checksum file in a draft release.
 - [ ] Install the macOS build on a clean machine and verify signing, notarization, launch, ticking, persistence, restart, and uninstall behavior.
