@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from datetime import date
 
@@ -12,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from streak_api.schemas import StatusResponse, StreakCreate, StreakResponse, StreakUpdate, TickCreate
-from streak_core import DEFAULT_STREAKS_DIR, DuplicateTickError, InvalidStreakIdError, StreakNotFoundError, StreakRepository, StreakService
+from streak_core import DuplicateTickError, InvalidStreakIdError, StreakNotFoundError, StreakRepository, StreakService, resolve_streaks_dir
 
 BASE_DIR = Path(__file__).parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -23,7 +22,7 @@ def _response(streak_id, streak):
 
 
 def create_app(streaks_dir: str | Path | None = None) -> FastAPI:
-    directory = Path(streaks_dir or os.getenv("STREAKS_DIR", DEFAULT_STREAKS_DIR))
+    directory = resolve_streaks_dir(streaks_dir)
     service = StreakService(StreakRepository(directory))
     app = FastAPI(title="Streak API", description="Local API and UI for streak.txt files", version="2.0.0")
     app.state.service = service

@@ -7,9 +7,7 @@ fn start_local_server(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>
     use std::process::Command;
 
     let sidecar = app.path().resource_dir()?.join("streak-server");
-    let data_dir = app.path().home_dir()?.join("streaks");
     Command::new(sidecar)
-        .env("STREAKS_DIR", data_dir)
         .env("STREAK_PORT", "8000")
         .spawn()?;
     Ok(())

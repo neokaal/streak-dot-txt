@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from streak_api.main import create_app
-from streak_core import StreakRepository, StreakService
+from streak_core import StreakRepository, StreakService, default_streaks_dir, resolve_streaks_dir
 from streak_core.services import DuplicateTickError
 
 
@@ -54,6 +54,15 @@ def test_repository_lists_legacy_filename_ids_with_spaces(service):
     directory.mkdir(parents=True)
     (directory / "streak-Reading (evening).txt").write_text("---\nname: Reading\ntick: Daily\n---\n")
     assert service.get_streak("Reading (evening)").name == "Reading"
+
+
+def test_streak_directory_defaults_to_home_streaks_and_allows_explicit_override(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    monkeypatch.delenv("STREAKS_DIR", raising=False)
+    assert default_streaks_dir(home) == home / "streaks"
+    assert resolve_streaks_dir(tmp_path / "chosen") == tmp_path / "chosen"
+    monkeypatch.setenv("STREAKS_DIR", str(tmp_path / "environment"))
+    assert resolve_streaks_dir() == tmp_path / "environment"
 
 
 def test_archive_is_recoverable(service):

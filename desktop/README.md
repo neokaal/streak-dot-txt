@@ -6,12 +6,13 @@ and release packaging only.
 
 ## Development
 
-1. In one terminal, run `STREAKS_DIR=/path/to/streaks .env/bin/python -m uvicorn streak_api.main:app --host 127.0.0.1 --port 8000`.
-2. Run `npm install` and `npm run tauri dev` from this directory.
+Run `./run-local.sh` from this directory. It starts the local server, opens the
+Tauri development window, and stops the server when the window exits. By
+default it uses `~/streaks`.
 
-Tauri opens `http://127.0.0.1:8000`. Development intentionally keeps the server
-separate so UI work remains quick and Python debugging stays straightforward.
-Release builds start their bundled sidecar and configure it with `~/streaks`.
+Set `STREAKS_DIR=/path/to/streaks` before the command only when deliberately
+using a different collection. Release builds start their bundled sidecar without
+an override, so they also use `~/streaks`.
 
 ## Release packaging
 
