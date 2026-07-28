@@ -4,8 +4,10 @@ from hashlib import sha256
 
 from fastapi.testclient import TestClient
 import pytest
+from click.testing import CliRunner
 
 from streak_api.main import create_app
+from streakdottxt import streakdottxt
 from streak_core import StreakRepository, StreakService, default_streaks_dir, resolve_streaks_dir
 from streak_core.models import DailyTick, Streak
 from streak_core.statistics import StreakStatsCalculator
@@ -85,6 +87,7 @@ def test_weekly_mark_does_not_confuse_the_same_week_number_across_years():
     streak.ticks.append(DailyTick(prior_year_week.isoformat()))
     assert streak.mark_today() is True
     assert len(streak.ticks) == 2
+    assert streak.is_current_period_ticked() is True
 
 
 def test_weekly_stats_normalize_ticks_to_the_start_of_each_week():
@@ -247,6 +250,18 @@ def test_dashboard_and_htmx_fragment_are_rendered_without_browser(client):
     assert f'id="{expected_dom_id}"' in card.text
 
 
+def test_weekly_card_stays_done_for_the_complete_current_week(client):
+    created = client.post(
+        "/api/v1/streaks",
+        json={"name": "Weekly review", "tick_type": "Weekly"},
+    )
+    assert created.status_code == 201
+    card = client.post("/ui/streaks/weekly-review/tick")
+    assert card.status_code == 200
+    assert "✓ Done" in card.text
+    assert "is-done" in card.text
+
+
 def test_foreign_origin_cannot_modify_local_streaks(client):
     response = client.post(
         "/api/v1/streaks",
@@ -287,3 +302,30 @@ def test_legacy_identifier_is_encoded_for_url_and_safe_for_dom(client):
     assert f'id="{expected_dom_id}"' in page.text
     assert "/ui/streaks/Read%20%231%3F/tick" in page.text
     assert f'hx-target="#{expected_dom_id}"' in page.text
+
+
+def test_cli_create_mark_and_list_use_the_unified_service(tmp_path):
+    streaks_directory = tmp_path / "cli-streaks"
+    runner = CliRunner()
+
+    created = runner.invoke(
+        streakdottxt,
+        ["--dir", str(streaks_directory), "new", "--name", "Read / Write"],
+    )
+    assert created.exit_code == 0, created.output
+    assert (streaks_directory / "streak-read-write.txt").is_file()
+
+    marked = runner.invoke(
+        streakdottxt,
+        ["--dir", str(streaks_directory), "mark", "--name", "read-write"],
+    )
+    assert marked.exit_code == 0, marked.output
+    assert "Tick added" in marked.output
+
+    listed = runner.invoke(
+        streakdottxt,
+        ["--dir", str(streaks_directory), "list"],
+    )
+    assert listed.exit_code == 0, listed.output
+    assert "Read / Write" in listed.output
+    assert "✓" in listed.output

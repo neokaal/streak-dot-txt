@@ -43,9 +43,9 @@ checked here until they are moved into release notes or archived.
 
 ### Unified Architecture
 
-- [ ] Migrate the CLI to the unified repository and service layer.
-- [ ] Migrate the Tkinter application to the unified repository and service layer while it remains supported.
-- [ ] Remove or migrate the unused legacy API endpoints that bypass current validation, archive, and response behavior.
+- [x] Migrate the CLI to the unified repository and service layer.
+- [x] Migrate the Tkinter application to the unified repository and service layer while it remains supported.
+- [x] Remove or migrate the unused legacy API endpoints that bypass current validation, archive, and response behavior.
 
 ### Automated Testing
 

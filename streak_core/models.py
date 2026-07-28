@@ -108,25 +108,29 @@ class Streak:
         Mark today or this week as ticked, but only if it is not already ticked
         """
         today = datetime.datetime.now()
+        if self.is_current_period_ticked(today.date()):
+            return False
+
         if self.tick == "Daily":
             today_tick = DailyTick(today.isoformat())
-            if today_tick.get_date() not in [tick.get_date() for tick in self.ticks]:
-                print("Adding today's tick:", today_tick.tick_datetime)
-                self.ticks.append(today_tick)
-                return True
-            else:
-                print("Today is already ticked")
-                return False
+            self.ticks.append(today_tick)
+            return True
         elif self.tick == "Weekly":
             start_of_week = today - datetime.timedelta(days=today.weekday())
             week_tick = DailyTick(start_of_week.isoformat())
-            if week_tick.get_iso_week() not in [tick.get_iso_week() for tick in self.ticks]:
-                print("Adding this week's tick:", week_tick.tick_datetime)
-                self.ticks.append(week_tick)
-                return True
-            else:
-                print("This week is already ticked")
-                return False
+            self.ticks.append(week_tick)
+            return True
+
+    def is_current_period_ticked(self, reference_date=None):
+        """Return whether the daily or weekly period containing a date is ticked."""
+        reference_date = reference_date or datetime.date.today()
+        if self.tick == "Daily":
+            return any(tick.get_date() == reference_date for tick in self.ticks)
+        if self.tick == "Weekly":
+            iso_calendar = reference_date.isocalendar()
+            target_week = (iso_calendar.year, iso_calendar.week)
+            return any(tick.get_iso_week() == target_week for tick in self.ticks)
+        raise ValueError(f"Unsupported tick type: {self.tick}")
 
     def get_years(self):
         """

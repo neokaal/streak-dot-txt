@@ -27,27 +27,28 @@ A command line tool to manage daily streaks all stored in text files.
 author: Abhishek Mishra
 date: 05/01/2025
 """
-import sys
-import os
 import datetime
+from pathlib import Path
+
 import click
 from rich.console import Console
 from rich.table import Table
 from rich import box
 
-# Import core functionality
 from streak_core import (
-    DailyTick, 
-    Streak, 
-    StreakFileManager, 
-    StreakStatsCalculator, 
+    DEFAULT_STREAKS_DIR,
+    DailyTick,
+    Streak as CoreStreak,
+    StreakFileManager,
+    StreakRepository,
+    StreakService,
+    StreakStatsCalculator,
     TerminalDisplay,
-    DEFAULT_STREAKS_DIR
 )
 
 
 # Enhanced Streak class that adds file I/O and statistics calculation
-class EnhancedStreak(Streak):
+class EnhancedStreak(CoreStreak):
     """
     Enhanced Streak class that combines the core Streak model with file operations
     and statistics calculations for backward compatibility.
@@ -113,22 +114,58 @@ def streakdottxt(ctx, dir):
     ctx.obj["dir"] = dir
 
 
+def _service(directory):
+    return StreakService(StreakRepository(directory))
+
+
+def _resolve_streak(directory, file_path=None, name=None):
+    if file_path:
+        path = Path(file_path).expanduser().resolve()
+        if not path.name.startswith("streak-") or path.suffix != ".txt":
+            raise click.ClickException(
+                "A streak file must use the name streak-<id>.txt"
+            )
+        service = _service(path.parent)
+        streak_id = path.stem.removeprefix("streak-")
+        return service, streak_id, service.get_streak(streak_id)
+
+    if name:
+        service = _service(directory)
+        query = name.casefold()
+        matches = [
+            (streak_id, streak)
+            for streak_id, streak in service.list_streaks()
+            if query in streak_id.casefold()
+            or query in (streak.name or "").casefold()
+        ]
+        if not matches:
+            raise click.ClickException(f"No streak found matching {name!r}")
+        if len(matches) > 1:
+            choices = ", ".join(streak_id for streak_id, _ in matches)
+            raise click.ClickException(
+                f"Multiple streaks match {name!r}: {choices}"
+            )
+        streak_id, streak = matches[0]
+        return service, streak_id, streak
+
+    raise click.ClickException("Provide either --file or --name")
+
+
 @streakdottxt.command(help="View the streak")
 @click.option("-f", "--file", help="Streak file to view")
 @click.option("-n", "--name", help="Name of the streak (fuzzy matched)")
 @click.pass_context
 def view(ctx, file, name):
-    dir = ctx.obj["dir"]
-    streak = get_streak_from_file_or_name(dir, file, name)
+    _, _, streak = _resolve_streak(ctx.obj["dir"], file, name)
     display = TerminalDisplay(streak)
     display.display_all()
 
 
 def mark_streak(dir, file, name):
-    streak = get_streak_from_file_or_name(dir, file, name)
-    # print the streak name
-    print("Streak:", streak.name)
-    streak.mark_today()
+    service, streak_id, streak = _resolve_streak(dir, file, name)
+    click.echo(f"Streak: {streak.name}")
+    changed = service.tick_today(streak_id)
+    click.echo("Tick added" if changed else "Already ticked")
 
 
 @streakdottxt.command(help="Mark today's tick")
@@ -153,20 +190,19 @@ def tick(ctx, file, name):
 @click.option("-n", "--name", required=True, help="Name of the new streak")
 @click.pass_context
 def new(ctx, name):
-    dir = ctx.obj["dir"]
     try:
-        streak_file = StreakFileManager.create_new_streak_file(dir, name)
-        print(f"Streak '{name}' created at {streak_file}")
-    except FileExistsError:
-        print("Streak already exists")
+        streak_id, _ = _service(ctx.obj["dir"]).create_streak(name)
+        path = StreakRepository(ctx.obj["dir"]).path_for(streak_id)
+        click.echo(f"Streak {name!r} created at {path}")
+    except (FileExistsError, ValueError) as error:
+        raise click.ClickException(str(error)) from error
 
 
 @streakdottxt.command(help="List all the streaks in the directory")
 @click.pass_context
 def list(ctx):
-    dir = ctx.obj["dir"]
-    streak_files = StreakFileManager.list_streak_files(dir)
-    if streak_files:
+    streaks = _service(ctx.obj["dir"]).list_streaks()
+    if streaks:
         table = Table(title="Streaks", box=box.SIMPLE)
         table.add_column("Today")
         table.add_column("Name")
@@ -175,12 +211,9 @@ def list(ctx):
         table.add_column("Current Streak")
         table.add_column("Tick Average")
 
-        for streak_file in streak_files:
-            streak = Streak(streak_file)
+        for _, streak in streaks:
             today = datetime.datetime.now().date()
-            today_status = (
-                "✓" if any(tick.get_date() == today for tick in streak.ticks) else "✖"
-            )
+            today_status = "✓" if streak.is_current_period_ticked(today) else "✖"
             table.add_row(
                 today_status,
                 streak.name,
@@ -193,14 +226,12 @@ def list(ctx):
         console = Console()
         console.print(table)
     else:
-        print("No streaks found")
+        click.echo("No streaks found")
 
 
 def get_streak_from_file_or_name(dir, file, name):
-    """
-    Get a streak from file or name using the StreakFileManager
-    """
-    return StreakFileManager.get_streak_from_file_or_name(dir, file, name)
+    """Backward-compatible lookup routed through the unified service."""
+    return _resolve_streak(dir, file, name)[2]
 
 
 if __name__ == "__main__":

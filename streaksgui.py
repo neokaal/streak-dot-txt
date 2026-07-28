@@ -30,13 +30,11 @@ date: 18/06/2025
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-import os
 import datetime
 from streak_core import (
-    Streak,
-    StreakFileManager,
-    StreakStatsCalculator,
     DEFAULT_STREAKS_DIR,
+    StreakRepository,
+    StreakService,
 )
 
 
@@ -67,37 +65,6 @@ class UIConstants:
     SMALL_PADDING = 5
 
 
-class GUIStreak(Streak):
-    """
-    GUI-compatible Streak class that includes file path and auto-save functionality.
-    """
-
-    def __init__(self, file_path=None):
-        super().__init__()
-        self.file_path = file_path
-
-        if file_path:
-            # Load from file
-            loaded_streak = StreakFileManager.load_from_file(file_path)
-            self.name = loaded_streak.name
-            self.tick = loaded_streak.tick
-            self.metadata = loaded_streak.metadata
-            self.ticks = loaded_streak.ticks
-            self.period = loaded_streak.period
-
-            # Calculate statistics
-            StreakStatsCalculator.calculate_stats(self)
-
-    def mark_today(self):
-        """Mark today and save to file automatically"""
-        result = super().mark_today()
-        if result and self.file_path:
-            StreakFileManager.save_to_file(self, self.file_path)
-            # Recalculate stats
-            StreakStatsCalculator.calculate_stats(self)
-        return result
-
-
 class QuickTickDashboard:
     def __init__(self):
         self.root = tk.Tk()
@@ -109,6 +76,7 @@ class QuickTickDashboard:
 
         # Directory setup
         self.streaks_dir = DEFAULT_STREAKS_DIR
+        self.service = StreakService(StreakRepository(self.streaks_dir))
         self.streaks = []
 
         self.setup_ui()
@@ -193,20 +161,10 @@ class QuickTickDashboard:
 
     def load_streaks(self):
         """Load all streak files from the directory"""
-        if not os.path.exists(self.streaks_dir):
-            os.makedirs(self.streaks_dir)
-
-        self.streaks = []
         try:
-            streak_files = StreakFileManager.list_streak_files(self.streaks_dir)
-
-            for streak_file in streak_files:
-                try:
-                    streak = GUIStreak(streak_file)
-                    self.streaks.append(streak)
-                except Exception as e:
-                    print(f"Error loading {streak_file}: {e}")
+            self.streaks = self.service.list_streaks()
         except Exception as e:
+            self.streaks = []
             print(f"Error accessing streaks directory: {e}")
 
         self.display_streaks()
@@ -240,19 +198,19 @@ class QuickTickDashboard:
         today = datetime.datetime.now().date()
         ticked_count = 0
 
-        for streak in self.streaks:
+        for streak_id, streak in self.streaks:
             already_ticked = self._is_streak_ticked_today(streak, today)
             if already_ticked:
                 ticked_count += 1
 
-            self._create_streak_widget(streak, already_ticked)
+            self._create_streak_widget(streak_id, streak, already_ticked)
 
         return ticked_count
 
     def _is_streak_ticked_today(self, streak, today):
-        return any(tick.get_date() == today for tick in streak.ticks)
+        return streak.is_current_period_ticked(today)
 
-    def _create_streak_widget(self, streak, already_ticked):
+    def _create_streak_widget(self, streak_id, streak, already_ticked):
         streak_frame = tk.Frame(
             self.scrollable_frame,
             relief="solid",
@@ -333,7 +291,9 @@ class QuickTickDashboard:
                 width=12,
                 height=2,
                 font=UIConstants.BODY_FONT,
-                command=lambda s=streak: self.tick_streak(s),
+                command=lambda sid=streak_id, name=streak.name: self.tick_streak(
+                    sid, name
+                ),
                 highlightbackground=UIConstants.BORDER_FG,
                 highlightcolor=UIConstants.BORDER_FG,
                 highlightthickness=1,
@@ -356,14 +316,14 @@ class QuickTickDashboard:
             text=f"Today's Progress: {ticked_count}/{total_streaks} ({completion_rate:.0f}%)"
         )
 
-    def tick_streak(self, streak):
+    def tick_streak(self, streak_id, streak_name):
         """Mark a streak as ticked for today"""
         try:
-            streak.mark_today()
-            self.display_streaks()  # Refresh the display
-            messagebox.showinfo("Success", f"✓ Marked '{streak.name}' for today!")
+            self.service.tick_today(streak_id)
+            self.load_streaks()
+            messagebox.showinfo("Success", f"✓ Marked '{streak_name}' for today!")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to tick '{streak.name}': {str(e)}")
+            messagebox.showerror("Error", f"Failed to tick '{streak_name}': {str(e)}")
 
     def refresh_streaks(self):
         """Reload streaks from disk"""
@@ -371,7 +331,7 @@ class QuickTickDashboard:
 
     def create_new_streak(self):
         """Open dialog to create a new streak"""
-        dialog = NewStreakDialog(self.root, self.streaks_dir)
+        dialog = NewStreakDialog(self.root, self.service)
         if dialog.result:
             self.refresh_streaks()
 
@@ -380,9 +340,9 @@ class QuickTickDashboard:
 
 
 class NewStreakDialog:
-    def __init__(self, parent, streaks_dir):
+    def __init__(self, parent, service):
         self.parent = parent
-        self.streaks_dir = streaks_dir
+        self.service = service
         self.result = None        # Create dialog window
         self.dialog = tk.Toplevel(parent)
         self.dialog.title("Create New Streak")
@@ -485,10 +445,7 @@ class NewStreakDialog:
         tick_type = self.tick_var.get()
 
         try:
-            # Use the StreakFileManager to create the streak file
-            filepath = StreakFileManager.create_new_streak_file(
-                self.streaks_dir, name, tick_type
-            )
+            self.service.create_streak(name, tick_type)
 
             self.result = True
             messagebox.showinfo("Success", f"Created new streak: '{name}'")
