@@ -123,6 +123,11 @@ The packaged sidecar chooses a free loopback port, verifies a per-launch
 identity token, and is terminated when Tauri exits. If startup fails, the
 desktop window displays the path to `sidecar.log`.
 
+The first launch of a newly built or installed unsigned macOS application can
+be slower while macOS validates the bundled runtime. Subsequent launches should
+start normally. Developer ID signing and notarization are separate distribution
+credentials rather than requirements for local builds.
+
 Useful release targets:
 
 - `make build`: compile Python and the release-mode Rust shell without bundling.

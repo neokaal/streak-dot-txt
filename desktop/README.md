@@ -31,3 +31,7 @@ location of `sidecar.log`.
 PyInstaller produces a directory-based sidecar that Tauri bundles as an
 application resource. Keeping the interpreter support files beside the
 executable avoids the extraction delay of a one-file sidecar.
+
+An unsigned macOS build can still have a slow first launch while macOS performs
+cold validation of the newly installed runtime. Manual verification for 0.1.0
+confirmed that subsequent launches are fast.

@@ -22,7 +22,7 @@ checked here until they are moved into release notes or archived.
 - [x] Replace the fixed desktop server port with a dynamically selected port.
 - [x] Verify the identity and readiness of the Streak.txt sidecar before redirecting the desktop shell.
 - [x] Add a bounded startup timeout and surface useful sidecar startup errors in the desktop window.
-- [ ] Reduce cold first-launch latency for the packaged desktop sidecar.
+- [x] Reduce packaged sidecar size and warm-start latency; accept the remaining one-time macOS cold-validation delay for unsigned local builds.
 
 ### Local Application Security
 
