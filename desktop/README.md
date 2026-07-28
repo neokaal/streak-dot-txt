@@ -16,7 +16,11 @@ an override, so they also use `~/streaks`.
 
 ## Release packaging
 
-`./package-sidecar.sh` creates a platform-specific `streak-server` executable
-with PyInstaller. Rename it using Tauri's target-triple convention and place it
-in `src-tauri/binaries/` before `npm run tauri build`. CI will eventually build
-one release per target and provide code signing/notarization credentials.
+Run `./package-release.sh` on the operating system you are packaging for. It
+builds the Python sidecar, gives it Tauri's required platform-specific name,
+and creates the native installer. The installer is written under
+`src-tauri/target/release/bundle/`.
+
+Build each target on its own operating system. The upcoming CI release workflow
+will build one artifact for macOS, Windows, and Linux; signing and notarization
+are separate release credentials, not part of ordinary local builds.
