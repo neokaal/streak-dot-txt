@@ -1,12 +1,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::Manager;
-
 #[cfg(not(debug_assertions))]
-fn start_local_server(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn start_local_server(_app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     use std::process::Command;
 
-    let sidecar = app.path().resource_dir()?.join("streak-server");
+    let executable = std::env::current_exe()?;
+    let sidecar = executable
+        .parent()
+        .ok_or("unable to find the Streak.txt application directory")?
+        .join("streak-server");
     Command::new(sidecar)
         .env("STREAK_PORT", "8000")
         .spawn()?;
