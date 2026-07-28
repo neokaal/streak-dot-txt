@@ -85,7 +85,7 @@ checked here until they are moved into release notes or archived.
 - [x] Finalize bundle metadata, including the application identifier, displayed version, and minimum supported macOS version.
 - [x] Restrict initial release artifacts to a macOS Apple Silicon DMG and a Windows x64 NSIS installer.
 - [x] Add a GitHub Actions workflow that runs checks, builds each platform's native Python sidecar, and creates a draft GitHub Release from a version tag.
-- [ ] Generate and attach SHA-256 checksums for every release artifact.
+- [x] Generate and attach SHA-256 checksums for every release artifact.
 - [x] Keep the initial open-source release independent of corporate Apple signing credentials.
 - [x] Verify the unsigned macOS DMG installs through the documented Gatekeeper override.
 - [x] Document supported platforms, installation, the streak data location, and the expected macOS Gatekeeper and Windows SmartScreen warnings.
@@ -94,15 +94,16 @@ checked here until they are moved into release notes or archived.
 
 ### Release Checklist - Copy Into Every Release
 
-- [ ] Confirm the release scope is complete and all intended backlog items are checked.
+- [x] Confirm the release scope is complete and all intended backlog items are checked.
 - [x] Update the version everywhere using the repository's version-update process.
 - [x] Add the completed release at the top of `CHANGELOG.md` with its version, release date, maintainer, and concise user-facing changes.
 - [x] Update user-facing documentation and use the changelog entry as the concise GitHub release notes.
 - [x] Run the complete automated check suite from a clean working tree.
-- [ ] Push the release commit and create the matching version tag.
-- [ ] Confirm GitHub Actions produces the macOS Apple Silicon DMG, Windows x64 installer, and checksum file in a draft release.
-- [ ] Install the macOS build on a clean machine and verify signing, notarization, launch, ticking, persistence, restart, and uninstall behavior.
-- [ ] Install the Windows build on a clean machine or virtual machine and verify installation, launch, ticking, persistence, restart, and uninstall behavior.
-- [ ] Confirm uninstalling either application does not remove the user's streak files.
-- [ ] Review the draft release notes and download links, then publish the release.
+- [x] Push the release commit and create the matching version tag.
+- [x] Confirm GitHub Actions produces the macOS Apple Silicon DMG, Windows x64 installer, and checksum file in a draft release.
+- [x] Install the macOS build on a clean machine and verify the expected signing and notarization policy, launch, ticking, persistence, restart, and uninstall behavior.
+- [x] Install the Windows build on a clean machine or virtual machine and verify installation, launch, ticking, persistence, restart, and uninstall behavior.
+- [x] Confirm uninstalling either application does not remove the user's streak files.
+- [x] Review the draft release notes and download links.
+- [ ] Publish the release.
 - [ ] Open the next release section and copy this release checklist into it.
