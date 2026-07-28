@@ -261,6 +261,14 @@ def test_same_origin_can_modify_local_streaks(client):
     assert response.status_code == 201
 
 
+def test_desktop_health_requires_the_current_sidecar_token(client, monkeypatch):
+    monkeypatch.setenv("STREAK_INSTANCE_TOKEN", "expected-token")
+    assert client.get("/desktop-health?token=wrong-token").status_code == 404
+    response = client.get("/desktop-health?token=expected-token")
+    assert response.status_code == 200
+    assert response.text == "expected-token"
+
+
 def test_legacy_identifier_is_encoded_for_url_and_safe_for_dom(client):
     directory = client.app.state.service.repository.directory
     directory.mkdir(parents=True)

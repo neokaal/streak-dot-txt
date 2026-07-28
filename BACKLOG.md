@@ -18,10 +18,10 @@ checked here until they are moved into release notes or archived.
 
 ### Desktop Runtime
 
-- [ ] Retain and manage the sidecar process handle so the server shuts down when the desktop application exits.
-- [ ] Replace the fixed desktop server port with a dynamically selected port.
-- [ ] Verify the identity and readiness of the Streak.txt sidecar before redirecting the desktop shell.
-- [ ] Add a bounded startup timeout and surface useful sidecar startup errors in the desktop window.
+- [x] Retain and manage the sidecar process handle so the server shuts down when the desktop application exits.
+- [x] Replace the fixed desktop server port with a dynamically selected port.
+- [x] Verify the identity and readiness of the Streak.txt sidecar before redirecting the desktop shell.
+- [x] Add a bounded startup timeout and surface useful sidecar startup errors in the desktop window.
 - [ ] Reduce first-launch latency caused by the one-file sidecar bundle.
 
 ### Local Application Security
@@ -59,7 +59,7 @@ checked here until they are moved into release notes or archived.
 - [ ] Provide packaging entry points that work on macOS, Linux, and Windows without assuming Unix shell paths and tools.
 - [ ] Separate runtime, test, and packaging dependencies and lock versions for reproducible builds.
 - [ ] Establish a release-version update process covering the Python package, Cargo package, Tauri configuration, and generated artifacts.
-- [ ] Make packaged sidecar logs and failures available for troubleshooting installed builds.
+- [x] Make packaged sidecar logs and failures available for troubleshooting installed builds.
 - [ ] Provide a macOS packaging path that does not require Finder automation for routine builds.
 
 ### Repository and Documentation

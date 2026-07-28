@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from datetime import date
 from hashlib import sha256
+import os
 from pathlib import Path
+import secrets
 from urllib.parse import quote, urlsplit
 
-from fastapi import FastAPI, Form, HTTPException, Request, status
+from fastapi import FastAPI, Form, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -56,6 +59,13 @@ def create_app(streaks_dir: str | Path | None = None) -> FastAPI:
     @app.get("/health")
     def health():
         return {"status": "healthy"}
+
+    @app.get("/desktop-health", response_class=PlainTextResponse, include_in_schema=False)
+    def desktop_health(token: str = Query()):
+        expected_token = os.getenv("STREAK_INSTANCE_TOKEN")
+        if not expected_token or not secrets.compare_digest(token, expected_token):
+            raise HTTPException(404, "Desktop sidecar not found")
+        return token
 
     @app.get("/api/v1/config")
     def config():
