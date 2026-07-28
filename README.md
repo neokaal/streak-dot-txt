@@ -92,21 +92,29 @@ test should use the normal `~/streaks` directory.
 
 ## Build a desktop release
 
-Install the pinned build dependencies first:
+Official desktop releases currently target:
+
+- macOS 11 or newer on Apple Silicon, distributed as an unsigned DMG
+- 64-bit Windows, distributed as an unsigned NSIS installer
+
+On macOS, first attempt to open Streak.txt, then open **System Settings →
+Privacy & Security** and choose **Open Anyway**. Windows may display a
+Microsoft Defender SmartScreen warning. These warnings remain until the
+project adopts platform-specific signing identities.
+
+The application remains local: the bundled service binds only to `127.0.0.1`,
+and streak data stays in the user's `streaks` directory.
+
+Install the pinned build dependencies and build on the target operating system:
 
 ```bash
 make install
-```
-
-Build the native bundles for the current operating system:
-
-```bash
 make distribute
 ```
 
 Run that command from the repository root. Windows uses the same Python script
 with `.env\Scripts\python`. Build each operating-system target on that operating
-system.
+system and architecture; the bundled Python sidecar is native.
 
 On macOS, build only the `.app` without invoking Finder-based DMG layout
 automation:
@@ -115,18 +123,19 @@ automation:
 make release-app
 ```
 
-The default build asks Tauri for all configured bundles, including DMG on
-macOS. Resulting installers are placed under
+The default local build asks Tauri for all configured bundles on the current
+operating system. Resulting installers are placed under
 `desktop/src-tauri/target/release/bundle/`.
 
 The packaged sidecar chooses a free loopback port, verifies a per-launch
 identity token, and is terminated when Tauri exits. If startup fails, the
 desktop window displays the path to `sidecar.log`.
 
-The first launch of a newly built or installed unsigned macOS application can
-be slower while macOS validates the bundled runtime. Subsequent launches should
-start normally. Developer ID signing and notarization are separate distribution
-credentials rather than requirements for local builds.
+Tagged releases are built by `.github/workflows/release.yml`. The workflow
+checks the source, builds the native sidecar and installer on each target,
+generates checksums, and leaves a draft GitHub Release for manual installation
+testing. The complete maintainer procedure is in
+[`docs/release-process.md`](docs/release-process.md).
 
 Useful release targets:
 
@@ -147,6 +156,9 @@ checked-in Python, Cargo, npm, and Tauri version markers with:
 
 Review the resulting diff and run the complete automated suite before
 committing a version change.
+
+`CHANGELOG.md` records completed releases in reverse chronological order.
+Update it on release day before creating the version tag.
 
 Generated Tauri configuration schemas under `desktop/src-tauri/gen/schemas/`
 are intentionally versioned for editor and configuration validation. Build

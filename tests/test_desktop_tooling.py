@@ -79,12 +79,42 @@ def test_release_builder_copies_the_target_sidecar_and_forwards_bundle_choice(
     )
     assert (copied_directory / sidecar.name).read_bytes() == b"sidecar"
     assert (copied_directory / "support-library").read_bytes() == b"support"
-    assert calls == [
-        (
-            ["npm", "run", "build", "--", "--bundles", "app"],
-            {"check": True, "cwd": desktop_directory},
-        )
+    command, options = calls[0]
+    assert command == [
+        "npm",
+        "run",
+        "build",
+        "--",
+        "--bundles",
+        "app",
+        "--no-sign",
     ]
+    assert options["check"] is True
+    assert options["cwd"] == desktop_directory
+    assert options["env"]["CI"] == "true"
+
+
+def test_release_builder_can_prepare_the_sidecar_without_running_tauri(
+    tmp_path,
+    monkeypatch,
+):
+    desktop_directory = tmp_path / "desktop"
+    sidecar_directory = tmp_path / "built-sidecar"
+    sidecar_directory.mkdir()
+    sidecar = sidecar_directory / (
+        "streak-server.exe" if os.name == "nt" else "streak-server"
+    )
+    sidecar.write_bytes(b"sidecar")
+
+    monkeypatch.setattr(package_release, "DESKTOP_DIR", desktop_directory)
+    monkeypatch.setattr(package_release, "build_sidecar", lambda: sidecar)
+
+    destination = package_release.prepare_sidecar_resource()
+
+    assert destination == (
+        desktop_directory / "src-tauri" / "resources" / "sidecar"
+    )
+    assert (destination / sidecar.name).read_bytes() == b"sidecar"
 
 
 def test_version_updater_rejects_non_semantic_versions_without_writing():

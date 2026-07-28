@@ -1,0 +1,143 @@
+name: Desktop release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  checks:
+    name: Release checks
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@v5
+
+      - name: Install Linux desktop dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes \
+            libappindicator3-dev \
+            librsvg2-dev \
+            libwebkit2gtk-4.1-dev \
+            patchelf
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            requirements.lock
+            requirements*.txt
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify the tag matches the application version
+        run: |
+          python -c "import os; from streak_core.version import __version__; expected = f'v{__version__}'; actual = os.environ['GITHUB_REF_NAME']; assert actual == expected, f'tag {actual} does not match version {expected}'"
+
+      - name: Install locked dependencies
+        run: |
+          python -m venv .env
+          make install
+
+      - name: Run the complete checks
+        run: make check
+
+  build:
+    name: Build ${{ matrix.label }}
+    needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macOS Apple Silicon
+            os: macos-15
+            architecture: arm64
+            bundle: dmg
+          - label: Windows x64
+            os: windows-latest
+            architecture: AMD64
+            bundle: nsis
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            requirements.lock
+            requirements-build.txt
+            requirements.txt
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Confirm the native runner architecture
+        shell: bash
+        run: |
+          python -c "import platform; expected = '${{ matrix.architecture }}'; actual = platform.machine(); assert actual == expected, f'runner architecture {actual} does not match {expected}'"
+
+      - name: Install locked build dependencies
+        run: python -m pip install --constraint requirements.lock --requirement requirements-build.txt
+
+      - name: Install locked desktop dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build and stage the native sidecar
+        run: python desktop/package_release.py --prepare-sidecar
+
+      - name: Build and upload the installer
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: Streak.txt ${{ github.ref_name }}
+          releaseBody: See CHANGELOG.md for the changes in this release.
+          releaseDraft: true
+          prerelease: false
+          args: --bundles ${{ matrix.bundle }} --no-sign
+
+  checksums:
+    name: Publish checksums
+    needs: build
+    runs-on: ubuntu-22.04
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Download the draft release assets
+        run: gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir release-assets
+
+      - name: Generate SHA-256 checksums
+        run: |
+          cd release-assets
+          sha256sum * > ../SHA256SUMS.txt
+
+      - name: Upload the checksum file
+        run: gh release upload "$GITHUB_REF_NAME" SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber

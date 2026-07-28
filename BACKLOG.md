@@ -81,15 +81,15 @@ checked here until they are moved into release notes or archived.
 
 ### Release Enablement - One-Time
 
-- [ ] Generate and configure production application icons for macOS and Windows.
-- [ ] Finalize bundle metadata, including the application identifier, displayed version, and minimum supported macOS version.
-- [ ] Restrict initial release artifacts to a macOS Apple Silicon DMG and a Windows x64 NSIS installer.
+- [x] Generate and configure production application icons for macOS and Windows.
+- [x] Finalize bundle metadata, including the application identifier, displayed version, and minimum supported macOS version.
+- [x] Restrict initial release artifacts to a macOS Apple Silicon DMG and a Windows x64 NSIS installer.
 - [ ] Add a GitHub Actions workflow that runs checks, builds each platform's native Python sidecar, and creates a draft GitHub Release from a version tag.
 - [ ] Generate and attach SHA-256 checksums for every release artifact.
-- [ ] Configure Apple Developer ID signing and notarization through protected GitHub repository secrets.
-- [ ] Verify the macOS DMG passes signature, notarization, and Gatekeeper checks.
-- [ ] Document supported platforms, installation, the streak data location, and the expected SmartScreen warning for the unsigned Windows installer.
-- [ ] Document the tag-to-draft-to-publish release workflow for maintainers.
+- [x] Keep the initial open-source release independent of corporate Apple signing credentials.
+- [ ] Verify the unsigned macOS DMG installs through the documented Gatekeeper override.
+- [x] Document supported platforms, installation, the streak data location, and the expected macOS Gatekeeper and Windows SmartScreen warnings.
+- [x] Document the tag-to-draft-to-publish release workflow for maintainers.
 - [ ] Create `CHANGELOG.md` in the established Semantic Versioning format and add the initial `0.1.0` release entry.
 
 ### Release Checklist - Copy Into Every Release
