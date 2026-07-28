@@ -167,6 +167,44 @@ def test_repository_lists_legacy_filename_ids_with_spaces(service):
     assert service.get_streak("Reading (evening)").name == "Reading"
 
 
+def test_repository_preserves_existing_order_and_appends_new_streaks(service):
+    directory = service.repository.directory
+    directory.mkdir(parents=True)
+    for streak_id, name in (("bravo", "Bravo"), ("charlie", "Charlie")):
+        (directory / f"streak-{streak_id}.txt").write_text(
+            f"---\nname: {name}\ntick: Daily\n---\n"
+        )
+
+    assert service.repository.list_ids() == ["bravo", "charlie"]
+    service.create_streak("Alpha")
+
+    assert service.repository.list_ids() == ["bravo", "charlie", "alpha"]
+    config = json.loads((directory / "streaks-config.json").read_text())
+    assert config == {
+        "version": 1,
+        "order": ["bravo", "charlie", "alpha"],
+    }
+
+    (directory / "streak-delta.txt").write_text(
+        "---\nname: Delta\ntick: Daily\n---\n"
+    )
+    assert service.repository.list_ids() == ["bravo", "charlie", "alpha", "delta"]
+
+    service.tick_today("bravo")
+    assert service.repository.list_ids() == ["bravo", "charlie", "alpha", "delta"]
+
+
+def test_repository_removes_archived_streak_from_portable_order(service):
+    first_id, _ = service.create_streak("First")
+    second_id, _ = service.create_streak("Second")
+
+    service.archive_streak(first_id)
+
+    assert service.repository.list_ids() == [second_id]
+    config = json.loads(service.repository.config_path.read_text())
+    assert config["order"] == [second_id]
+
+
 def test_streak_directory_defaults_to_home_streaks_and_allows_explicit_override(tmp_path, monkeypatch):
     home = tmp_path / "home"
     monkeypatch.delenv("STREAKS_DIR", raising=False)
@@ -272,6 +310,45 @@ def test_dashboard_and_htmx_fragment_are_rendered_without_browser(client):
     assert card.status_code == 200
     expected_dom_id = f"streak-{sha256(b'journal').hexdigest()[:16]}"
     assert f'id="{expected_dom_id}"' in card.text
+
+
+def test_dashboard_renders_dense_switchboard_and_non_shifting_create_dialog(client):
+    for index in range(25):
+        client.app.state.service.create_streak(f"Practice {index + 1:02}")
+
+    page = client.get("/")
+
+    assert page.text.count('role="listitem"') == 25
+    assert 'class="switchboard"' in page.text
+    assert 'id="create-streak-dialog"' in page.text
+    assert "<details" not in page.text
+    assert page.text.index("Practice 01") < page.text.index("Practice 25")
+
+    stylesheet = client.get("/static/app.css").text
+    assert set(re.findall(r"#[0-9a-fA-F]{6}", stylesheet)) == {
+        "#f5f6df",
+        "#5a8f78",
+        "#3a5068",
+        "#372a51",
+    }
+
+
+def test_htmx_tick_returns_same_pressed_control_geometry(client):
+    client.app.state.service.create_streak("Long practice name that must remain readable")
+    before = client.get("/")
+    expected_dom_id = f"streak-{sha256(b'long-practice-name-that-must-remain-readable').hexdigest()[:16]}"
+    assert "Long practice name that must remain readable" in before.text
+    assert 'aria-pressed="false"' in before.text
+
+    control = client.post(
+        "/ui/streaks/long-practice-name-that-must-remain-readable/tick"
+    )
+
+    assert f'id="{expected_dom_id}"' in control.text
+    assert "streak-control is-done" in control.text
+    assert 'aria-pressed="true"' in control.text
+    assert "disabled" in control.text
+    assert "✓ Done" in control.text
 
 
 def test_weekly_card_stays_done_for_the_complete_current_week(client):

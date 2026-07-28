@@ -8,33 +8,53 @@
   <script src="/static/htmx.min.js"></script>
 </head>
 <body>
-  <main>
+  <main class="app-shell">
     <header class="app-header">
-      <div>
-        <p class="eyebrow">STREAK.TXT</p>
-        <h1>Today</h1>
+      <div class="app-title">
+        <span aria-hidden="true">■</span>
+        <h1>Streak.txt</h1>
       </div>
-      <p class="header-summary"><strong>{{ streaks|length }}</strong> streak{% if streaks|length != 1 %}s{% endif %}</p>
+      <p class="today"><strong>Today</strong> <time datetime="{{ today.isoformat() }}">{{ today.strftime('%a %d %b') }}</time></p>
+      <div class="header-actions">
+        <p class="header-summary"><strong>{{ streaks|length }}</strong> streak{% if streaks|length != 1 %}s{% endif %}</p>
+        <button type="button" aria-haspopup="dialog" onclick="document.getElementById('create-streak-dialog').showModal()">New streak…</button>
+      </div>
     </header>
 
-    <details class="create-streak">
-      <summary>+ New streak</summary>
-      <form method="post" action="/ui/streaks">
-        <label>Name <input required name="name" placeholder="Morning walk"></label>
-        <label>Cadence <select name="tick_type"><option>Daily</option><option>Weekly</option></select></label>
-        <label>Description <input name="description" placeholder="Optional"></label>
-        <button>Create</button>
-      </form>
-    </details>
-
-    <section aria-labelledby="streaks-heading">
-      <div class="section-heading"><h2 id="streaks-heading">Your streaks</h2><span>Use + Tick to record today</span></div>
-      <div class="cards">
+    <section class="switchboard-panel" aria-labelledby="streaks-heading">
+      <div class="panel-heading">
+        <h2 id="streaks-heading">Today’s switchboard</h2>
+        <span>Press Tick after completing a streak</span>
+      </div>
+      <div class="switchboard" role="list">
         {% for streak_id, streak in streaks %}{% include "partials/streak_card.html" %}{% else %}
           <p class="empty">No streaks yet. Start with one small practice.</p>
         {% endfor %}
       </div>
     </section>
+
+    <footer class="status-bar">
+      <span>Ready</span>
+      <span>{{ streaks|length }} control{% if streaks|length != 1 %}s{% endif %}</span>
+    </footer>
   </main>
+
+  <dialog id="create-streak-dialog" aria-labelledby="create-streak-title">
+    <form method="post" action="/ui/streaks">
+      <div class="dialog-title">
+        <h2 id="create-streak-title">Create streak</h2>
+        <button type="button" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
+      </div>
+      <div class="dialog-body">
+        <label>Name <input required autofocus name="name" placeholder="Morning walk"></label>
+        <label>Cadence <select name="tick_type"><option>Daily</option><option>Weekly</option></select></label>
+        <label>Description <input name="description" placeholder="Optional"></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+        <button type="submit">Create</button>
+      </div>
+    </form>
+  </dialog>
 </body>
 </html>

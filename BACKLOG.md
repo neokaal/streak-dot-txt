@@ -36,13 +36,13 @@ checked here until they are moved into release notes or archived.
 
 ### Daily Switchboard UI
 
-- [ ] Replace the responsive card dashboard with a dense, fixed-position desktop grid that keeps 25 streaks visible in the default 960 × 720 window without page scrolling.
-- [ ] Persist a deterministic panel order so ticking or reloading never moves a streak, and newly created streaks take the next available position without rearranging existing ones.
-- [ ] Redesign each streak as a compact control with its full name, current/best/rate readouts, and a consistently positioned tick button.
-- [ ] Give ticked streaks an unmistakable pressed state that remains clear without color and does not change the control's size or position.
-- [ ] Apply the Dusty4 palette through shared style variables across every normal, hover, focus, and completed state without introducing additional interface colors.
-- [ ] Keep streak creation available from the daily screen without expanding the page or shifting the switchboard controls.
-- [ ] Add rendering and interaction regressions for stable ordering and completion states, and verify the populated switchboard at the default desktop viewport.
+- [x] Replace the responsive card dashboard with a dense, fixed-position desktop grid that keeps 25 streaks visible in the default 960 × 720 window without page scrolling.
+- [x] Persist a deterministic panel order so ticking or reloading never moves a streak, and newly created streaks take the next available position without rearranging existing ones.
+- [x] Redesign each streak as a compact control with its full name, current/best/rate readouts, and a consistently positioned tick button.
+- [x] Give ticked streaks an unmistakable pressed state that remains clear without color and does not change the control's size or position.
+- [x] Apply the Dusty4 palette through shared style variables across every normal, hover, focus, and completed state without introducing additional interface colors.
+- [x] Keep streak creation available from the daily screen without expanding the page or shifting the switchboard controls.
+- [x] Add rendering and interaction regressions for stable ordering and completion states, and verify the populated switchboard at the default desktop viewport.
 
 ### Streak and Statistics Correctness
 

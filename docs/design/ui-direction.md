@@ -44,6 +44,9 @@ clear usability problem.
 
 - Stable geometry and control placement take priority over automatic
   organization.
+- Store panel order and future collection-level settings in
+  `streaks-config.json` beside the streak files so they travel with the
+  collection.
 - Completion must remain clear without relying on color alone.
 - Undo should require more intention than tick; its exact interaction remains
   to be decided.

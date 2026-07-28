@@ -1,15 +1,14 @@
-<article class="card" id="{{ streak_id|streak_dom_id }}">
-  <div class="card-heading">
-    <p class="eyebrow">{{ streak.tick }}</p>
+<article class="streak-control{% if streak.is_current_period_ticked(today) %} is-done{% endif %}" id="{{ streak_id|streak_dom_id }}" role="listitem">
+  <header class="control-heading">
     <h3 title="{{ streak.name }}">{{ streak.name }}</h3>
-    {% if streak.metadata.get('description') %}<p class="description">{{ streak.metadata['description'] }}</p>{% endif %}
-  </div>
-  <dl>
+    <span>{{ streak.tick }}</span>
+  </header>
+  <dl aria-label="Streak statistics">
     <div><dt>Now</dt><dd>{{ streak.stats.current_streak }}</dd></div>
     <div><dt>Best</dt><dd>{{ streak.stats.longest_streak }}</dd></div>
     <div><dt>Rate</dt><dd>{{ (streak.stats.tick_average * 100)|round|int }}%</dd></div>
   </dl>
-  <button class="tick-button{% if streak.is_current_period_ticked(today) %} is-done{% endif %}" hx-post="/ui/streaks/{{ streak_id|streak_url_id }}/tick" hx-target="#{{ streak_id|streak_dom_id }}" hx-swap="outerHTML">
+  <button class="tick-button" aria-pressed="{% if streak.is_current_period_ticked(today) %}true{% else %}false{% endif %}"{% if streak.is_current_period_ticked(today) %} disabled{% endif %} hx-post="/ui/streaks/{{ streak_id|streak_url_id }}/tick" hx-target="#{{ streak_id|streak_dom_id }}" hx-swap="outerHTML">
     {% if streak.is_current_period_ticked(today) %}✓ Done{% else %}+ Tick{% endif %}
   </button>
 </article>
