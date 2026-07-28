@@ -32,7 +32,6 @@ def build_release(bundles: str | None = None) -> None:
     command = [npm, "run", "build", "--"]
     if bundles:
         command.extend(["--bundles", bundles])
-    command.append("--no-sign")
     environment = os.environ.copy()
     environment["CI"] = "true"
     subprocess.run(

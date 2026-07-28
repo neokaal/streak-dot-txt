@@ -122,7 +122,7 @@ jobs:
         working-directory: desktop
         env:
           CI: "true"
-        run: npm run tauri -- build --bundles ${{ matrix.bundle }} --no-sign
+        run: npm run tauri -- build --bundles ${{ matrix.bundle }}
 
       - name: Store the installer for manual verification
         if: github.event_name == 'workflow_dispatch'
@@ -145,7 +145,7 @@ jobs:
           releaseBody: See CHANGELOG.md for the changes in this release.
           releaseDraft: true
           prerelease: false
-          args: --bundles ${{ matrix.bundle }} --no-sign
+          args: --bundles ${{ matrix.bundle }}
 
   checksums:
     name: Publish checksums

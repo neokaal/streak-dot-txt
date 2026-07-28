@@ -94,7 +94,8 @@ test should use the normal `~/streaks` directory.
 
 Official desktop releases currently target:
 
-- macOS 11 or newer on Apple Silicon, distributed as an unsigned DMG
+- macOS 11 or newer on Apple Silicon, distributed as an identity-free
+  ad-hoc-signed and unnotarized DMG
 - 64-bit Windows, distributed as an unsigned NSIS installer
 
 On macOS, first attempt to open Streak.txt, then open **System Settings →

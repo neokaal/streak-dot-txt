@@ -2,7 +2,8 @@
 
 Streak.txt desktop releases currently contain two native installers:
 
-- an unsigned macOS DMG for Apple Silicon and macOS 11 or newer
+- an identity-free ad-hoc-signed and unnotarized macOS DMG for Apple Silicon
+  and macOS 11 or newer
 - an unsigned Windows NSIS installer for 64-bit Windows
 
 The macOS application requires a manual Gatekeeper override, and the Windows
@@ -13,9 +14,12 @@ credentials.
 ## Signing policy
 
 The initial open-source release does not use a corporate Apple Developer
-identity or a Windows code-signing certificate. The release workflow therefore
-requires no long-lived signing credentials. It uses GitHub's short-lived
-repository token only to create and update a draft release.
+identity or a Windows code-signing certificate. Tauri seals the macOS bundle
+with the ad-hoc pseudo-identity `-`, which uses no Apple account but prevents
+macOS from treating the downloaded bundle as structurally broken. The release
+workflow therefore requires no long-lived signing credentials. It uses
+GitHub's short-lived repository token only to create and update a draft
+release.
 
 If repository ownership changes later, signing can be added without changing
 the release artifact types or the tag-to-draft workflow.

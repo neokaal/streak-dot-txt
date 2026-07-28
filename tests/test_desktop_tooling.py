@@ -87,7 +87,6 @@ def test_release_builder_copies_the_target_sidecar_and_forwards_bundle_choice(
         "--",
         "--bundles",
         "app",
-        "--no-sign",
     ]
     assert options["check"] is True
     assert options["cwd"] == desktop_directory
