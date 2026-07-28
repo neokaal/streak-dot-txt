@@ -40,11 +40,13 @@ reviewed.
 
 ## Build the draft release
 
-1. Push the reviewed release commit to `main`.
-2. Create the matching annotated tag, such as `v0.2.0`, and push that tag.
-3. The `Desktop release` GitHub Actions workflow verifies that the tag matches
+1. Push the reviewed release preparation to `main`.
+2. Run the `Desktop release` workflow manually and download its private,
+   short-lived artifacts to confirm both native builds complete.
+3. Create the matching annotated tag, such as `v0.2.0`, and push that tag.
+4. The tag-triggered workflow verifies that the tag matches
    the application version.
-4. The workflow builds both native installers, creates a draft GitHub Release,
+5. The workflow builds both native installers, creates a draft GitHub Release,
    and uploads `SHA256SUMS.txt`.
 
 The draft remains private until a maintainer publishes it.

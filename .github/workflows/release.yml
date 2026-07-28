@@ -1,6 +1,7 @@
 name: Desktop release
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*"
@@ -13,7 +14,7 @@ jobs:
     name: Release checks
     runs-on: ubuntu-22.04
     steps:
-      - name: Check out the tagged source
+      - name: Check out the source
         uses: actions/checkout@v5
 
       - name: Install Linux desktop dependencies
@@ -45,6 +46,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Verify the tag matches the application version
+        if: github.event_name == 'push'
         run: |
           python -c "import os; from streak_core.version import __version__; expected = f'v{__version__}'; actual = os.environ['GITHUB_REF_NAME']; assert actual == expected, f'tag {actual} does not match version {expected}'"
 
@@ -64,16 +66,20 @@ jobs:
       matrix:
         include:
           - label: macOS Apple Silicon
+            artifact: macos-arm64
             os: macos-15
             architecture: arm64
             bundle: dmg
+            artifactPath: desktop/src-tauri/target/release/bundle/dmg/*.dmg
           - label: Windows x64
+            artifact: windows-x64
             os: windows-latest
             architecture: AMD64
             bundle: nsis
+            artifactPath: desktop/src-tauri/target/release/bundle/nsis/*.exe
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Check out the tagged source
+      - name: Check out the source
         uses: actions/checkout@v5
 
       - name: Set up Python
@@ -111,7 +117,24 @@ jobs:
       - name: Build and stage the native sidecar
         run: python desktop/package_release.py --prepare-sidecar
 
-      - name: Build and upload the installer
+      - name: Build the installer for manual verification
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: desktop
+        env:
+          CI: "true"
+        run: npm run tauri -- build --bundles ${{ matrix.bundle }} --no-sign
+
+      - name: Store the installer for manual verification
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7
+        with:
+          name: streak-txt-${{ matrix.artifact }}
+          path: ${{ matrix.artifactPath }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Build and upload the release installer
+        if: github.event_name == 'push'
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -126,6 +149,7 @@ jobs:
 
   checksums:
     name: Publish checksums
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-22.04
     env:
