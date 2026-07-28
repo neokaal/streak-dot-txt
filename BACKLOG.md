@@ -105,5 +105,5 @@ checked here until they are moved into release notes or archived.
 - [x] Install the Windows build on a clean machine or virtual machine and verify installation, launch, ticking, persistence, restart, and uninstall behavior.
 - [x] Confirm uninstalling either application does not remove the user's streak files.
 - [x] Review the draft release notes and download links.
-- [ ] Publish the release.
+- [x] Publish the release.
 - [ ] Open the next release section and copy this release checklist into it.
