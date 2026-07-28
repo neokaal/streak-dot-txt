@@ -1,1 +1,21 @@
-<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=http://127.0.0.1:8000/"><title>Streak.txt</title><p>Starting Streak.txt…</p>
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Streak.txt</title>
+<style>body{font:16px system-ui,sans-serif;color:#1e2922;background:#f5f3eb;margin:0;padding:28px}p{color:#657069}</style>
+<h1>Starting Streak.txt…</h1>
+<p>Preparing your local streaks.</p>
+<script>
+  const server = "http://127.0.0.1:8000";
+  async function openWhenReady() {
+    try {
+      await fetch(`${server}/health`, { cache: "no-store", mode: "no-cors" });
+      window.location.replace(`${server}/`);
+    } catch {
+      window.setTimeout(openWhenReady, 250);
+    }
+  }
+  openWhenReady();
+</script>
+</html>
