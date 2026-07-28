@@ -34,7 +34,8 @@ the release artifact types or the tag-to-draft workflow.
    ```
 
 3. Add the release at the top of `CHANGELOG.md` with its version, release date,
-   maintainer, and concise user-facing changes.
+   maintainer, and concise user-facing changes. Use this entry as the GitHub
+   release description rather than maintaining separate release notes.
 4. Update other user-facing documentation when behavior or support changes.
 5. Run `make check` from a clean working tree.
 6. Commit the release preparation and review the resulting commit.
@@ -74,7 +75,7 @@ On Windows:
 - create and tick a streak, restart, and confirm persistence
 - uninstall the application and confirm the streak files remain
 
-Confirm the checksum file covers both installers. Review the changelog-derived
-release notes and download links, then publish the draft release manually.
-Finally, open the next release section in `BACKLOG.md` and copy its repeatable
-release checklist.
+Confirm the checksum file covers both installers. Copy the matching changelog
+entry into the GitHub release description, review the download links, and then
+publish the draft release manually. Finally, open the next release section in
+`BACKLOG.md` and copy its repeatable release checklist.

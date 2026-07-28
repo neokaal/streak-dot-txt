@@ -97,7 +97,7 @@ checked here until they are moved into release notes or archived.
 - [ ] Confirm the release scope is complete and all intended backlog items are checked.
 - [x] Update the version everywhere using the repository's version-update process.
 - [x] Add the completed release at the top of `CHANGELOG.md` with its version, release date, maintainer, and concise user-facing changes.
-- [x] Update user-facing documentation and prepare concise GitHub release notes from the changelog entry.
+- [x] Update user-facing documentation and use the changelog entry as the concise GitHub release notes.
 - [x] Run the complete automated check suite from a clean working tree.
 - [ ] Push the release commit and create the matching version tag.
 - [ ] Confirm GitHub Actions produces the macOS Apple Silicon DMG, Windows x64 installer, and checksum file in a draft release.
