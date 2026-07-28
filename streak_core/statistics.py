@@ -44,7 +44,15 @@ class StreakStatsCalculator:
         longest_streak - longest streak of ticked days or weeks
         tick_average - percentage of days/weeks that have been ticked
         """
-        if not streak.ticks:
+        today = datetime.date.today()
+        current_period = StreakStatsCalculator._normalize_date(streak, today)
+        tick_dates = {
+            StreakStatsCalculator._normalize_date(streak, tick.get_date())
+            for tick in streak.ticks
+            if StreakStatsCalculator._normalize_date(streak, tick.get_date()) <= current_period
+        }
+
+        if not tick_dates:
             streak.stats = {
                 "total_days": 0,
                 "ticked_days": 0,
@@ -55,22 +63,21 @@ class StreakStatsCalculator:
             }
             return streak.stats
 
-        if streak.tick == "Daily":
-            streak.stats["total_days"] = (
-                datetime.datetime.now().date() - streak.ticks[0].get_date()
-            ).days + 1
-        elif streak.tick == "Weekly":
-            streak.stats["total_days"] = (
-                (datetime.datetime.now().date() - streak.ticks[0].get_date()).days // 7
-            ) + 1
-
-        streak.stats["ticked_days"] = len(streak.ticks)
+        first_period = min(tick_dates)
+        streak.stats["total_days"] = (
+            (current_period - first_period).days // streak.period
+        ) + 1
+        streak.stats["ticked_days"] = len(tick_dates)
         streak.stats["unticked_days"] = (
             streak.stats["total_days"] - streak.stats["ticked_days"]
         )
         
         # Calculate current and longest streaks
-        current_streak, longest_streak = StreakStatsCalculator._calculate_streaks(streak)
+        current_streak, longest_streak = StreakStatsCalculator._calculate_streaks(
+            tick_dates,
+            current_period,
+            streak.period,
+        )
         streak.stats["current_streak"] = current_streak
         streak.stats["longest_streak"] = longest_streak
         
@@ -83,38 +90,30 @@ class StreakStatsCalculator:
         return streak.stats
 
     @staticmethod
-    def _calculate_streaks(streak):
+    def _normalize_date(streak, tick_date):
+        if streak.tick == "Daily":
+            return tick_date
+        if streak.tick == "Weekly":
+            return tick_date - datetime.timedelta(days=tick_date.weekday())
+        raise ValueError(f"Unsupported tick type: {streak.tick}")
+
+    @staticmethod
+    def _calculate_streaks(tick_dates, current_period, period):
         """
         Calculate current and longest streaks for the given streak object.
         Returns (current_streak, longest_streak) tuple.
         """
-        current_streak = 0
         longest_streak = 0
-        temp_current_streak = 0
-        
-        today = datetime.datetime.now().date()
-        tick_dates = {tick.get_date() for tick in streak.ticks}
-        last_tick_date = None
+        run = 0
+        previous = None
 
-        for single_date in (
-            streak.ticks[0].get_date() + datetime.timedelta(n * streak.period)
-            for n in range(streak.stats["total_days"])
-        ):
-            if single_date in tick_dates:
-                if (
-                    last_tick_date is None
-                    or (single_date - last_tick_date).days == streak.period
-                ):
-                    temp_current_streak += 1
-                else:
-                    temp_current_streak = 1
-                if temp_current_streak > longest_streak:
-                    longest_streak = temp_current_streak
-                last_tick_date = single_date
+        for tick_date in sorted(tick_dates):
+            if previous is not None and (tick_date - previous).days == period:
+                run += 1
             else:
-                temp_current_streak = 0
+                run = 1
+            longest_streak = max(longest_streak, run)
+            previous = tick_date
 
-        # Current streak is the streak that extends to today or the most recent date
-        current_streak = temp_current_streak
-        
+        current_streak = run if previous == current_period else 0
         return current_streak, longest_streak

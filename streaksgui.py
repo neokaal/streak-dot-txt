@@ -431,7 +431,7 @@ class NewStreakDialog:
         tick_combo = ttk.Combobox(
             tick_frame,
             textvariable=self.tick_var,
-            values=["Daily", "Weekly", "Monthly"],
+            values=["Daily", "Weekly"],
             state="readonly",
             font=("Arial", 12),
         )

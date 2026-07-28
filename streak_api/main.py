@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from datetime import date
+from hashlib import sha256
+from pathlib import Path
+from urllib.parse import quote, urlsplit
 
 from fastapi import FastAPI, Form, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -15,6 +17,8 @@ from streak_core import DuplicateTickError, InvalidStreakIdError, StreakNotFound
 
 BASE_DIR = Path(__file__).parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.filters["streak_url_id"] = lambda value: quote(str(value), safe="")
+templates.env.filters["streak_dom_id"] = lambda value: f"streak-{sha256(str(value).encode()).hexdigest()[:16]}"
 
 
 def _response(streak_id, streak):
@@ -28,8 +32,19 @@ def create_app(streaks_dir: str | Path | None = None) -> FastAPI:
     app.state.service = service
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
-    def get_service() -> StreakService:
-        return app.state.service
+    @app.middleware("http")
+    async def reject_foreign_write_origins(request: Request, call_next):
+        if request.method not in {"GET", "HEAD", "OPTIONS"}:
+            origin = request.headers.get("origin")
+            if origin:
+                parsed_origin = urlsplit(origin)
+                request_host = request.headers.get("host", "")
+                if parsed_origin.scheme not in {"http", "https"} or parsed_origin.netloc != request_host:
+                    return JSONResponse(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        content={"detail": "Cross-origin write requests are not allowed"},
+                    )
+        return await call_next(request)
 
     def translate(error: Exception):
         if isinstance(error, StreakNotFoundError):

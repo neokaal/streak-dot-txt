@@ -8,13 +8,13 @@ checked here until they are moved into release notes or archived.
 
 ### Data Integrity and File Handling
 
-- [ ] Use one canonical streak ID and filename derivation path across the repository and file manager.
-- [ ] Reject invalid streak names and tick types before creating or modifying any files.
-- [ ] Detect unexpected end-of-file while parsing metadata and ticks instead of hanging indefinitely.
-- [ ] Isolate malformed or unreadable streak files so one bad file cannot take down the complete dashboard.
-- [ ] Preserve every archived streak by preventing silent overwrites when an archive filename already exists.
-- [ ] Define and enforce safe escaping or validation for metadata values written to streak files.
-- [ ] Reconcile the advertised Monthly tick type with the tick types actually supported by the model and parser.
+- [x] Use one canonical streak ID and filename derivation path across the repository and file manager.
+- [x] Reject invalid streak names and tick types before creating or modifying any files.
+- [x] Detect unexpected end-of-file while parsing metadata and ticks instead of hanging indefinitely.
+- [x] Isolate malformed or unreadable streak files so one bad file cannot take down the complete dashboard.
+- [x] Preserve every archived streak by preventing silent overwrites when an archive filename already exists.
+- [x] Define and enforce safe escaping or validation for metadata values written to streak files.
+- [x] Reconcile the advertised Monthly tick type with the tick types actually supported by the model and parser.
 
 ### Desktop Runtime
 
@@ -26,9 +26,9 @@ checked here until they are moved into release notes or archived.
 
 ### Local Application Security
 
-- [ ] Bind the standalone local API to `127.0.0.1` by default instead of exposing it to the local network.
-- [ ] Protect local write endpoints from cross-origin create and tick requests.
-- [ ] Encode streak IDs safely when inserting them into URLs, HTML IDs, and CSS selectors.
+- [x] Bind the standalone local API to `127.0.0.1` by default instead of exposing it to the local network.
+- [x] Protect local write endpoints from cross-origin create and tick requests.
+- [x] Encode streak IDs safely when inserting them into URLs, HTML IDs, and CSS selectors.
 
 ### Web Application
 
@@ -36,10 +36,10 @@ checked here until they are moved into release notes or archived.
 
 ### Streak and Statistics Correctness
 
-- [ ] Include the ISO year when detecting duplicate weekly ticks.
-- [ ] Normalize weekly tick dates consistently before calculating current and longest streaks.
-- [ ] Define statistics behavior for duplicate, unsorted, and future-dated ticks and cover it with tests.
-- [ ] Keep model invariants synchronized when metadata changes the tick type or period.
+- [x] Include the ISO year when detecting duplicate weekly ticks.
+- [x] Normalize weekly tick dates consistently before calculating current and longest streaks.
+- [x] Define statistics behavior for duplicate, unsorted, and future-dated ticks and cover it with tests.
+- [x] Keep model invariants synchronized when metadata changes the tick type or period.
 
 ### Unified Architecture
 
@@ -49,9 +49,9 @@ checked here until they are moved into release notes or archived.
 
 ### Automated Testing
 
-- [ ] Replace the unittest-only test command with a runner that executes the complete pytest suite.
-- [ ] Give every filesystem test its own temporary directory instead of sharing and clearing `/tmp/test_streaks`.
-- [ ] Add regression tests for malformed files, filename normalization, invalid tick types, archive collisions, and weekly year boundaries.
+- [x] Replace the unittest-only test command with a runner that executes the complete pytest suite.
+- [x] Give every filesystem test its own temporary directory instead of sharing and clearing `/tmp/test_streaks`.
+- [x] Add regression tests for malformed files, filename normalization, invalid tick types, archive collisions, and weekly year boundaries.
 - [ ] Add automated tests for desktop sidecar lifecycle and readiness logic without launching the desktop UI.
 
 ### Packaging and Releases

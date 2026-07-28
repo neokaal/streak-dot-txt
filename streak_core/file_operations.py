@@ -26,7 +26,9 @@ Handles loading and saving of streak files.
 """
 
 import os
+import re
 import sys
+from .constants import SUPPORTED_TICK_TYPES
 from .models import Streak, DailyTick
 
 
@@ -34,6 +36,27 @@ class StreakFileManager:
     """
     Handles all file I/O operations for streak files.
     """
+
+    @staticmethod
+    def slugify_name(name):
+        """Return the canonical filename-safe identifier for a streak name."""
+        if not isinstance(name, str):
+            raise ValueError("A streak name must be text")
+        slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+        if not slug:
+            raise ValueError("A streak name must contain letters or numbers")
+        return slug
+
+    @staticmethod
+    def validate_metadata(metadata):
+        """Ensure metadata can be represented safely in the line-based format."""
+        for key, value in metadata.items():
+            key_text = str(key)
+            value_text = str(value)
+            if not key_text or ":" in key_text or "\n" in key_text or "\r" in key_text:
+                raise ValueError(f"Invalid metadata key: {key_text!r}")
+            if "\n" in value_text or "\r" in value_text:
+                raise ValueError(f"Metadata value for {key_text!r} must be a single line")
 
     @staticmethod
     def load_from_file(filepath):
@@ -63,20 +86,23 @@ class StreakFileManager:
             filepath = getattr(streak, 'streak_file', None)
             if filepath is None:
                 raise ValueError("No file path provided and streak has no existing file")        
+        metadata = dict(streak.metadata)
+        if streak.name:
+            metadata["name"] = streak.name
+        if streak.tick:
+            metadata["tick"] = streak.tick
+        StreakFileManager.validate_metadata(metadata)
+
         with open(filepath, "w") as f:
             # write the metadata
             f.write("---\n")
-            # Ensure name and tick are in metadata
-            if streak.name:
-                streak.metadata["name"] = streak.name
-            if streak.tick:
-                streak.metadata["tick"] = streak.tick
-            
-            for key, value in streak.metadata.items():
+            for key, value in metadata.items():
                 f.write(f"{key}: {value}\n")
-            f.write("---\n")            # write the ticks
+            f.write("---\n")
             for tick in streak.ticks:
                 f.write(f"{tick.tick_datetime_str}\n")
+
+        streak.metadata = metadata
 
     @staticmethod
     def _read_metadata(streak):
@@ -88,14 +114,15 @@ class StreakFileManager:
             if line == "---\n":
                 while True:
                     line = f.readline()
-                    if line != "---\n":
-                        if ": " in line:
-                            key, value = line.split(": ", 1)
-                            key = key.strip()
-                            value = value.strip()
-                            streak.metadata[key] = value
-                    else:
+                    if line == "":
+                        raise ValueError(f"Unterminated metadata block in {streak.streak_file}")
+                    if line == "---\n":
                         break
+                    if ": " in line:
+                        key, value = line.split(": ", 1)
+                        key = key.strip()
+                        value = value.strip()
+                        streak.metadata[key] = value
         
         if "name" in streak.metadata:
             streak.name = streak.metadata["name"]
@@ -107,7 +134,9 @@ class StreakFileManager:
             elif streak.tick == "Weekly":
                 streak.period = 7
             else:
-                raise ValueError(f"Unsupported tick type: {streak.tick}")    @staticmethod
+                raise ValueError(f"Unsupported tick type: {streak.tick}")
+
+    @staticmethod
     def _read_ticks(streak):
         """
         Read the ticks from the file.
@@ -123,13 +152,16 @@ class StreakFileManager:
             if line == "---\n":
                 while True:
                     line = f.readline()
+                    if line == "":
+                        raise ValueError(f"Unterminated metadata block in {streak.streak_file}")
                     if line == "---\n":
                         break
-            # read the ticks
-            while line:
                 line = f.readline()
+            # read the ticks, including the first line when no metadata exists
+            while line:
                 if line and line.strip():
                     streak.ticks.append(DailyTick(line.strip()))
+                line = f.readline()
 
     @staticmethod
     def find_streak_file(directory, name):
@@ -169,21 +201,32 @@ class StreakFileManager:
             sys.exit(1)
 
     @staticmethod
-    def create_new_streak_file(directory, name, tick_type="Daily"):
+    def create_new_streak_file(directory, name, tick_type="Daily", metadata=None):
         """
         Create a new streak file with the given name and tick type.
         Returns the path to the created file.
         """
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-            
-        name_in_path = name.replace(" ", "-").lower()
+        if tick_type not in SUPPORTED_TICK_TYPES:
+            raise ValueError(f"tick_type must be one of: {', '.join(SUPPORTED_TICK_TYPES)}")
+
+        normalized_name = name.strip() if isinstance(name, str) else name
+        name_in_path = StreakFileManager.slugify_name(normalized_name)
+        file_metadata = {"name": normalized_name, "tick": tick_type}
+        if metadata:
+            file_metadata.update(metadata)
+        StreakFileManager.validate_metadata(file_metadata)
+
+        os.makedirs(directory, exist_ok=True)
         streak_file = os.path.join(directory, f"streak-{name_in_path}.txt")
-        
-        if os.path.exists(streak_file):
-            raise FileExistsError(f"Streak file already exists: {streak_file}")        
-        with open(streak_file, "w") as f:
-            f.write(f"---\nname: {name}\ntick: {tick_type}\n---\n")
+
+        try:
+            with open(streak_file, "x") as f:
+                f.write("---\n")
+                for key, value in file_metadata.items():
+                    f.write(f"{key}: {value}\n")
+                f.write("---\n")
+        except FileExistsError:
+            raise FileExistsError(f"Streak file already exists: {streak_file}") from None
         
         return streak_file
 

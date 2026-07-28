@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date
+import logging
 
 from .models import DailyTick
 from .repository import StreakRepository
 from .statistics import StreakStatsCalculator
+
+logger = logging.getLogger(__name__)
 
 
 class DuplicateTickError(ValueError):
@@ -23,16 +25,19 @@ class StreakService:
         return streak
 
     def list_streaks(self):
-        return [(streak_id, self._hydrate(self.repository.load(streak_id))) for streak_id in self.repository.list_ids()]
+        streaks = []
+        for streak_id in self.repository.list_ids():
+            try:
+                streaks.append((streak_id, self._hydrate(self.repository.load(streak_id))))
+            except (OSError, ValueError) as error:
+                logger.warning("Skipping unreadable streak %r: %s", streak_id, error)
+        return streaks
 
     def get_streak(self, streak_id: str):
         return self._hydrate(self.repository.load(streak_id))
 
     def create_streak(self, name: str, tick_type: str = "Daily", description: str | None = None):
-        streak_id, streak = self.repository.create(name, tick_type)
-        if description:
-            streak.set_metadata("description", description)
-            self.repository.save(streak, streak_id)
+        streak_id, streak = self.repository.create(name, tick_type, description)
         return streak_id, self._hydrate(streak)
 
     def tick_today(self, streak_id: str) -> bool:
@@ -57,10 +62,7 @@ class StreakService:
         if description is not None:
             streak.set_metadata("description", description)
         if tick_type is not None:
-            if tick_type not in ("Daily", "Weekly"):
-                raise ValueError("tick_type must be Daily or Weekly")
             streak.set_metadata("tick", tick_type)
-            streak.period = 1 if tick_type == "Daily" else 7
         self.repository.save(streak, streak_id)
         return self._hydrate(streak)
 

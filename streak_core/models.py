@@ -61,6 +61,10 @@ class DailyTick:
         # get the week in the year
         return self.tick_datetime.isocalendar()[1]
 
+    def get_iso_week(self):
+        iso_calendar = self.tick_datetime.isocalendar()
+        return iso_calendar.year, iso_calendar.week
+
     def get_date(self):
         return self.tick_datetime.date()
 
@@ -95,13 +99,9 @@ class Streak:
             "tick_average": 0
         }
         
-        # Set period based on tick type
-        if self.tick == "Daily":
-            self.period = 1
-        elif self.tick == "Weekly":
-            self.period = 7
-        else:
+        if self.tick not in TICK_PERIODS:
             raise ValueError(f"Unsupported tick type: {self.tick}")
+        self.period = TICK_PERIODS[self.tick]
 
     def mark_today(self):
         """
@@ -120,9 +120,7 @@ class Streak:
         elif self.tick == "Weekly":
             start_of_week = today - datetime.timedelta(days=today.weekday())
             week_tick = DailyTick(start_of_week.isoformat())
-            if week_tick.get_week_in_year() not in [
-                tick.get_week_in_year() for tick in self.ticks
-            ]:
+            if week_tick.get_iso_week() not in [tick.get_iso_week() for tick in self.ticks]:
                 print("Adding this week's tick:", week_tick.tick_datetime)
                 self.ticks.append(week_tick)
                 return True
@@ -156,4 +154,7 @@ class Streak:
         if key == "name":
             self.name = value
         elif key == "tick":
+            if value not in TICK_PERIODS:
+                raise ValueError(f"Unsupported tick type: {value}")
             self.tick = value
+            self.period = TICK_PERIODS[value]

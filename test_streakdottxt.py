@@ -1,6 +1,7 @@
 import unittest
 import os
 import datetime
+import tempfile
 from streakdottxt import Streak, DailyTick, TerminalDisplay
 
 
@@ -16,8 +17,8 @@ class TestDailyTick(unittest.TestCase):
 
 class TestStreak(unittest.TestCase):
     def setUp(self):
-        self.test_dir = "/tmp/test_streaks"
-        os.makedirs(self.test_dir, exist_ok=True)
+        self.temp_directory = tempfile.TemporaryDirectory()
+        self.test_dir = self.temp_directory.name
         self.streak_file = os.path.join(self.test_dir, "streak-test.txt")
         with open(self.streak_file, "w") as f:
             f.write(
@@ -25,10 +26,7 @@ class TestStreak(unittest.TestCase):
             )
 
     def tearDown(self):
-        if os.path.exists(self.test_dir):
-            for file in os.listdir(self.test_dir):
-                os.remove(os.path.join(self.test_dir, file))
-            os.rmdir(self.test_dir)
+        self.temp_directory.cleanup()
 
     def test_read_metadata(self):
         streak = Streak(self.streak_file)
@@ -84,17 +82,21 @@ class TestStreak(unittest.TestCase):
             )
         streak = Streak(self.streak_file)
         streak.calculate_stats()
-        total_weeks = (
-            (datetime.datetime.now().date() - datetime.date(2025, 1, 1)).days // 7
-        ) + 1
+        first_week = datetime.date(2025, 1, 1) - datetime.timedelta(
+            days=datetime.date(2025, 1, 1).weekday()
+        )
+        current_week = datetime.datetime.now().date() - datetime.timedelta(
+            days=datetime.datetime.now().date().weekday()
+        )
+        total_weeks = ((current_week - first_week).days // 7) + 1
         self.assertEqual(streak.stats["total_days"], total_weeks)
         self.assertEqual(streak.stats["ticked_days"], 2)
 
 
 class TestTerminalDisplay(unittest.TestCase):
     def setUp(self):
-        self.test_dir = "/tmp/test_streaks"
-        os.makedirs(self.test_dir, exist_ok=True)
+        self.temp_directory = tempfile.TemporaryDirectory()
+        self.test_dir = self.temp_directory.name
         self.streak_file = os.path.join(self.test_dir, "streak-test.txt")
         with open(self.streak_file, "w") as f:
             f.write(
@@ -104,10 +106,7 @@ class TestTerminalDisplay(unittest.TestCase):
         self.display = TerminalDisplay(self.streak)
 
     def tearDown(self):
-        if os.path.exists(self.test_dir):
-            for file in os.listdir(self.test_dir):
-                os.remove(os.path.join(self.test_dir, file))
-            os.rmdir(self.test_dir)
+        self.temp_directory.cleanup()
 
     def test_display_streak_info(self):
         self.display.display_streak_info()

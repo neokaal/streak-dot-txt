@@ -48,11 +48,10 @@ def resolve_streaks_dir(override: str | Path | None = None) -> Path:
 DEFAULT_STREAKS_DIR = str(default_streaks_dir())
 
 # Supported tick types
-SUPPORTED_TICK_TYPES = ["Daily", "Weekly", "Monthly"]
+SUPPORTED_TICK_TYPES = ("Daily", "Weekly")
 
 # Tick type to period mapping (in days)
 TICK_PERIODS = {
     "Daily": 1,
     "Weekly": 7,
-    "Monthly": None  # Variable length
 }

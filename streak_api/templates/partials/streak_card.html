@@ -1,4 +1,4 @@
-<article class="card" id="streak-{{ streak_id }}">
+<article class="card" id="{{ streak_id|streak_dom_id }}">
   <div class="card-heading">
     <p class="eyebrow">{{ streak.tick }}</p>
     <h3 title="{{ streak.name }}">{{ streak.name }}</h3>
@@ -9,7 +9,7 @@
     <div><dt>Best</dt><dd>{{ streak.stats.longest_streak }}</dd></div>
     <div><dt>Rate</dt><dd>{{ (streak.stats.tick_average * 100)|round|int }}%</dd></div>
   </dl>
-  <button class="tick-button{% if streak.ticks and streak.ticks[-1].get_date() == today %} is-done{% endif %}" hx-post="/ui/streaks/{{ streak_id }}/tick" hx-target="#streak-{{ streak_id }}" hx-swap="outerHTML">
+  <button class="tick-button{% if streak.ticks and streak.ticks[-1].get_date() == today %} is-done{% endif %}" hx-post="/ui/streaks/{{ streak_id|streak_url_id }}/tick" hx-target="#{{ streak_id|streak_dom_id }}" hx-swap="outerHTML">
     {% if streak.ticks and streak.ticks[-1].get_date() == today %}✓ Done{% else %}+ Tick{% endif %}
   </button>
 </article>

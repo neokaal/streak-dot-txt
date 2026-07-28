@@ -1,12 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Run tests with coverage
-coverage run -m unittest discover
+python -m coverage run -m pytest
 
-# Generate coverage report
-coverage report
+python -m coverage report
 
-# Generate HTML coverage report
-coverage html
+python -m coverage html
 
 echo "HTML report generated in htmlcov/index.html"

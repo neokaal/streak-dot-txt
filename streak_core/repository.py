@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import re
 import tempfile
 from pathlib import Path
 
@@ -27,10 +26,10 @@ class StreakRepository:
 
     @staticmethod
     def slugify(name: str) -> str:
-        slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-        if not slug:
-            raise InvalidStreakIdError("A streak name must contain letters or numbers")
-        return slug
+        try:
+            return StreakFileManager.slugify_name(name)
+        except ValueError as error:
+            raise InvalidStreakIdError(str(error)) from error
 
     def _validate_id(self, streak_id: str) -> str:
         # IDs are incorporated into a filename. Existing files can have names
@@ -54,13 +53,19 @@ class StreakRepository:
             raise StreakNotFoundError(streak_id)
         return StreakFileManager.load_from_file(str(path))
 
-    def create(self, name: str, tick_type: str):
+    def create(self, name: str, tick_type: str, description: str | None = None):
         streak_id = self.slugify(name)
         self.directory.mkdir(parents=True, exist_ok=True)
         path = self.path_for(streak_id)
         if path.exists():
             raise FileExistsError(f"Streak already exists: {streak_id}")
-        StreakFileManager.create_new_streak_file(str(self.directory), name, tick_type)
+        metadata = {"description": description} if description else None
+        StreakFileManager.create_new_streak_file(
+            str(self.directory),
+            name,
+            tick_type,
+            metadata=metadata,
+        )
         return streak_id, self.load(streak_id)
 
     def save(self, streak, streak_id: str) -> None:
@@ -78,10 +83,16 @@ class StreakRepository:
                 os.unlink(temporary_name)
             raise
 
-    def archive(self, streak_id: str) -> None:
+    def archive(self, streak_id: str) -> Path:
         path = self.path_for(streak_id)
         if not path.is_file():
             raise StreakNotFoundError(streak_id)
         archive = self.directory / "archive"
         archive.mkdir(exist_ok=True)
-        os.replace(path, archive / path.name)
+        destination = archive / path.name
+        counter = 1
+        while destination.exists():
+            destination = archive / f"{path.stem}.{counter}{path.suffix}"
+            counter += 1
+        os.replace(path, destination)
+        return destination
