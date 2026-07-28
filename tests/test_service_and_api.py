@@ -1,6 +1,10 @@
 import datetime
 from datetime import date
 from hashlib import sha256
+import json
+from pathlib import Path
+import re
+import tomllib
 
 from fastapi.testclient import TestClient
 import pytest
@@ -8,7 +12,13 @@ from click.testing import CliRunner
 
 from streak_api.main import create_app
 from streakdottxt import streakdottxt
-from streak_core import StreakRepository, StreakService, default_streaks_dir, resolve_streaks_dir
+from streak_core import (
+    StreakRepository,
+    StreakService,
+    __version__,
+    default_streaks_dir,
+    resolve_streaks_dir,
+)
 from streak_core.models import DailyTick, Streak
 from streak_core.statistics import StreakStatsCalculator
 from streak_core.services import DuplicateTickError
@@ -228,6 +238,20 @@ def test_api_has_isolated_create_tick_list_flow(client):
     assert listed.json()[0]["stats"]["current_streak"] == 1
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"name": "   "},
+        {"name": "Read", "tick_type": "Monthly"},
+        {"name": "Read", "description": "line one\nline two"},
+    ],
+)
+def test_api_rejects_invalid_create_before_writing(client, payload):
+    response = client.post("/api/v1/streaks", json=payload)
+    assert response.status_code == 422
+    assert client.app.state.service.repository.list_ids() == []
+
+
 def test_api_rejects_invalid_identifier_and_archives(client):
     assert client.get("/api/v1/streaks/../etc").status_code in (404, 400)
     client.post("/api/v1/streaks", json={"name": "Archive", "tick_type": "Daily"})
@@ -329,3 +353,33 @@ def test_cli_create_mark_and_list_use_the_unified_service(tmp_path):
     assert listed.exit_code == 0, listed.output
     assert "Read / Write" in listed.output
     assert "✓" in listed.output
+
+
+def test_release_version_is_consistent_across_python_and_desktop_manifests():
+    project_root = Path(__file__).resolve().parents[1]
+    cargo = tomllib.loads(
+        (project_root / "desktop/src-tauri/Cargo.toml").read_text()
+    )
+    tauri = json.loads(
+        (project_root / "desktop/src-tauri/tauri.conf.json").read_text()
+    )
+    npm = json.loads((project_root / "desktop/package.json").read_text())
+    npm_lock = json.loads(
+        (project_root / "desktop/package-lock.json").read_text()
+    )
+    cargo_lock = (project_root / "desktop/src-tauri/Cargo.lock").read_text()
+    cargo_lock_version = re.search(
+        r'(?ms)\[\[package\]\]\nname = "streak-txt"\nversion = "([^"]+)"',
+        cargo_lock,
+    )
+
+    assert cargo_lock_version is not None
+    assert {
+        __version__,
+        cargo["package"]["version"],
+        tauri["version"],
+        npm["version"],
+        npm_lock["version"],
+        npm_lock["packages"][""]["version"],
+        cargo_lock_version.group(1),
+    } == {"0.1.0"}

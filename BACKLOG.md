@@ -52,18 +52,18 @@ checked here until they are moved into release notes or archived.
 - [x] Replace the unittest-only test command with a runner that executes the complete pytest suite.
 - [x] Give every filesystem test its own temporary directory instead of sharing and clearing `/tmp/test_streaks`.
 - [x] Add regression tests for malformed files, filename normalization, invalid tick types, archive collisions, and weekly year boundaries.
-- [ ] Add automated tests for desktop sidecar lifecycle and readiness logic without launching the desktop UI.
+- [x] Add automated tests for desktop sidecar lifecycle and readiness logic without launching the desktop UI.
 
 ### Packaging and Releases
 
-- [ ] Provide packaging entry points that work on macOS, Linux, and Windows without assuming Unix shell paths and tools.
-- [ ] Separate runtime, test, and packaging dependencies and lock versions for reproducible builds.
-- [ ] Establish a release-version update process covering the Python package, Cargo package, Tauri configuration, and generated artifacts.
+- [x] Provide packaging entry points that work on macOS, Linux, and Windows without assuming Unix shell paths and tools.
+- [x] Separate runtime, test, and packaging dependencies and lock versions for reproducible builds.
+- [x] Establish a release-version update process covering the Python package, Cargo package, Tauri configuration, and generated artifacts.
 - [x] Make packaged sidecar logs and failures available for troubleshooting installed builds.
-- [ ] Provide a macOS packaging path that does not require Finder automation for routine builds.
+- [x] Provide a macOS packaging path that does not require Finder automation for routine builds.
 
 ### Repository and Documentation
 
-- [ ] Document the supported local, desktop development, and distribution workflows in one authoritative location.
-- [ ] Update stale API documentation to match the current `streak-{id}.txt` storage convention.
-- [ ] Decide which generated Tauri files and release artifacts belong in version control and ignore the remainder.
+- [x] Document the supported local, desktop development, and distribution workflows in one authoritative location.
+- [x] Update stale API documentation to match the current `streak-{id}.txt` storage convention.
+- [x] Decide which generated Tauri files and release artifacts belong in version control and ignore the remainder.

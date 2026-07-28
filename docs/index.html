@@ -83,6 +83,9 @@ SOFTWARE.
           </li>
         </ul>
       </li>
+      <li>
+        <a href="#applications">Web and Desktop Applications</a>
+      </li>
 
       <li>
         <a href="#project">Project</a>
@@ -112,8 +115,8 @@ SOFTWARE.
     </p>
 
     <i>
-      To organize the streaks better you can keep all your streak files in a
-      "streaks" directory however this is not a requirement.
+      The applications use <code>~/streaks</code> by default. The format itself
+      remains plain text and can be edited without the applications.
     </i>
 
     <h2 id="usage">Usage</h2>
@@ -171,6 +174,7 @@ SOFTWARE.
     <pre>
 ---
 name: Jumping Jacks
+tick: Daily
 ---
 2021-01-01
 2021-01-03
@@ -188,7 +192,7 @@ name: Jumping Jacks
       <ol>
         <li>
           Reference implementation: Clarifies the file format, especially any
-          undocumented decisions which might later becom part of the file
+          undocumented decisions which might later become part of the file
           format.
         </li>
         <li>
@@ -206,9 +210,14 @@ name: Jumping Jacks
         <pre>
 git clone https://github.com/abhishekmishra/streak-dot-txt.git
 cd streak-dot-txt
-pip install -r requirements.txt
-python streakdottxt.py --help
+python3 -m venv .env
+.env/bin/python -m pip install -c requirements.lock -r requirements-dev.txt
+.env/bin/python streakdottxt.py --help
         </pre>
+        <p>
+          Windows users should use <code>.env\Scripts\python</code>. See the
+          repository README for the complete development and packaging guide.
+        </p>
       </div>
 
       <div id="commands">
@@ -278,6 +287,27 @@ Tick [Daily]
       </div>
     </div>
 
+    <div id="applications">
+      <h2>Web and Desktop Applications</h2>
+      <p>
+        Release 0.1.0, codename <b>Hearth Pheasant</b>, adds a local FastAPI and
+        HTMX web application plus a cross-platform Tauri desktop shell. Both use
+        the same service layer and plain-text streak files as the CLI.
+      </p>
+      <p>
+        Run the local web application with
+        <code>.env/bin/python run_api.py</code>, or the Tauri development window
+        with <code>.env/bin/python desktop/run_local.py</code>. The HTMX asset
+        is bundled, so the interface works offline.
+      </p>
+      <p>
+        Full testing, packaging, and platform-specific instructions live in the
+        <a href="https://github.com/abhishekmishra/streak-dot-txt#readme"
+          >repository README</a
+        >.
+      </p>
+    </div>
+
     <div id="project">
       <h2>Project</h2>
 
@@ -344,6 +374,11 @@ Tick [Daily]
           <th>Date</th>
           <th>Changes</th>
           <th>Author</th>
+        </tr>
+        <tr>
+          <td>2026-07-28</td>
+          <td>Documented the 0.1.0 local web and Tauri desktop applications</td>
+          <td>Abhishek (<a href="https://neolateral.in">neolateral.in</a>)</td>
         </tr>
         <tr>
           <td>2025-01-05</td>

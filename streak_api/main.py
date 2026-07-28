@@ -10,18 +10,38 @@ import secrets
 from urllib.parse import quote, urlsplit
 
 from fastapi import FastAPI, Form, HTTPException, Query, Request, status
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from streak_api.schemas import StatusResponse, StreakCreate, StreakResponse, StreakUpdate, TickCreate
-from streak_core import DuplicateTickError, InvalidStreakIdError, StreakNotFoundError, StreakRepository, StreakService, resolve_streaks_dir
+from streak_api.schemas import (
+    StatusResponse,
+    StreakCreate,
+    StreakResponse,
+    StreakUpdate,
+    TickCreate,
+)
+from streak_core import (
+    DuplicateTickError,
+    InvalidStreakIdError,
+    StreakNotFoundError,
+    StreakRepository,
+    StreakService,
+    __version__,
+    resolve_streaks_dir,
+)
 
 BASE_DIR = Path(__file__).parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 templates.env.filters["streak_url_id"] = lambda value: quote(str(value), safe="")
-templates.env.filters["streak_dom_id"] = lambda value: f"streak-{sha256(str(value).encode()).hexdigest()[:16]}"
+templates.env.filters["streak_dom_id"] = (
+    lambda value: f"streak-{sha256(str(value).encode()).hexdigest()[:16]}"
+)
 
 
 def _response(streak_id, streak):
@@ -31,7 +51,11 @@ def _response(streak_id, streak):
 def create_app(streaks_dir: str | Path | None = None) -> FastAPI:
     directory = resolve_streaks_dir(streaks_dir)
     service = StreakService(StreakRepository(directory))
-    app = FastAPI(title="Streak API", description="Local API and UI for streak.txt files", version="2.0.0")
+    app = FastAPI(
+        title="Streak API",
+        description="Local API and UI for streak.txt files",
+        version=__version__,
+    )
     app.state.service = service
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -42,7 +66,10 @@ def create_app(streaks_dir: str | Path | None = None) -> FastAPI:
             if origin:
                 parsed_origin = urlsplit(origin)
                 request_host = request.headers.get("host", "")
-                if parsed_origin.scheme not in {"http", "https"} or parsed_origin.netloc != request_host:
+                if (
+                    parsed_origin.scheme not in {"http", "https"}
+                    or parsed_origin.netloc != request_host
+                ):
                     return JSONResponse(
                         status_code=status.HTTP_403_FORBIDDEN,
                         content={"detail": "Cross-origin write requests are not allowed"},
@@ -52,7 +79,15 @@ def create_app(streaks_dir: str | Path | None = None) -> FastAPI:
     def translate(error: Exception):
         if isinstance(error, StreakNotFoundError):
             raise HTTPException(404, "Streak not found") from error
-        if isinstance(error, (InvalidStreakIdError, DuplicateTickError, ValueError, FileExistsError)):
+        if isinstance(
+            error,
+            (
+                InvalidStreakIdError,
+                DuplicateTickError,
+                ValueError,
+                FileExistsError,
+            ),
+        ):
             raise HTTPException(400, str(error)) from error
         raise error
 
@@ -69,7 +104,11 @@ def create_app(streaks_dir: str | Path | None = None) -> FastAPI:
 
     @app.get("/api/v1/config")
     def config():
-        return {"streaks_directory": str(directory), "directory_exists": directory.exists(), "total_streak_files": len(service.repository.list_ids())}
+        return {
+            "streaks_directory": str(directory),
+            "directory_exists": directory.exists(),
+            "total_streak_files": len(service.repository.list_ids()),
+        }
 
     @app.get("/api/v1/streaks", response_model=list[StreakResponse])
     def list_streaks():

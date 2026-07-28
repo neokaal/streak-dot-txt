@@ -32,17 +32,30 @@ from .models import DailyTick, Streak
 from .file_operations import StreakFileManager
 from .statistics import StreakStatsCalculator
 from .display import TerminalDisplay
-from .constants import DEFAULT_STREAKS_DIR, SUPPORTED_TICK_TYPES, default_streaks_dir, resolve_streaks_dir
+from .constants import (
+    DEFAULT_STREAKS_DIR,
+    SUPPORTED_TICK_TYPES,
+    default_streaks_dir,
+    resolve_streaks_dir,
+)
 from .repository import StreakRepository, StreakNotFoundError, InvalidStreakIdError
 from .services import StreakService, DuplicateTickError
+from .version import __version__
 
 __all__ = [
-    'DailyTick',
-    'Streak', 
-    'StreakFileManager',
-    'StreakStatsCalculator',
-    'TerminalDisplay',
-    'DEFAULT_STREAKS_DIR',
-    'SUPPORTED_TICK_TYPES', 'default_streaks_dir', 'resolve_streaks_dir'
-    ,'StreakRepository', 'StreakNotFoundError', 'InvalidStreakIdError', 'StreakService', 'DuplicateTickError'
+    "DEFAULT_STREAKS_DIR",
+    "DailyTick",
+    "DuplicateTickError",
+    "InvalidStreakIdError",
+    "SUPPORTED_TICK_TYPES",
+    "Streak",
+    "StreakFileManager",
+    "StreakNotFoundError",
+    "StreakRepository",
+    "StreakService",
+    "StreakStatsCalculator",
+    "TerminalDisplay",
+    "__version__",
+    "default_streaks_dir",
+    "resolve_streaks_dir",
 ]

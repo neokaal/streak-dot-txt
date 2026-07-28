@@ -1,21 +1,25 @@
-"""
-Pydantic schemas for API request/response models
-"""
+"""Pydantic schemas for API request and response models."""
 
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
-from datetime import datetime, date
+from datetime import datetime
+from typing import Annotated, Any, Literal
+
+from pydantic import BaseModel, Field, StringConstraints
+
+
+StreakName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+SingleLine = Annotated[str, StringConstraints(max_length=1_000, pattern=r"^[^\r\n]*$")]
+TickType = Literal["Daily", "Weekly"]
 
 
 class StreakCreate(BaseModel):
-    name: str
-    tick_type: str = "Daily"
-    description: Optional[str] = None
+    name: StreakName
+    tick_type: TickType = "Daily"
+    description: SingleLine | None = None
 
 
 class StreakUpdate(BaseModel):
-    description: Optional[str] = None
-    tick_type: Optional[str] = None
+    description: SingleLine | None = None
+    tick_type: TickType | None = None
 
 
 class TickResponse(BaseModel):
@@ -31,11 +35,11 @@ class StreakResponse(BaseModel):
     id: str
     name: str
     tick_type: str
-    description: Optional[str] = None
-    metadata: Dict[str, Any] = {}
-    ticks: List[TickResponse] = []
-    stats: Dict[str, Any] = {}
-    years: List[int] = []
+    description: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    ticks: list[TickResponse] = Field(default_factory=list)
+    stats: dict[str, Any] = Field(default_factory=dict)
+    years: list[int] = Field(default_factory=list)
 
     @classmethod
     def from_streak(cls, streak, streak_id: str):
@@ -66,7 +70,7 @@ class StreakResponse(BaseModel):
 
 
 class TickCreate(BaseModel):
-    tick_datetime_str: str
+    tick_datetime_str: Annotated[str, StringConstraints(min_length=1, max_length=100)]
 
 
 class StatusResponse(BaseModel):

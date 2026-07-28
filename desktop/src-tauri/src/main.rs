@@ -5,26 +5,33 @@ use std::{
     fs::{self, OpenOptions},
     io::{Read, Write},
     net::{SocketAddr, TcpListener, TcpStream},
-    process::{Child, Command, Stdio},
-    sync::{Arc, Mutex},
+    process::{Command, Stdio},
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+};
+#[cfg(any(not(debug_assertions), test))]
+use std::{
+    process::Child,
+    sync::{Arc, Mutex},
 };
 #[cfg(not(debug_assertions))]
 use tauri::Manager;
 
-#[cfg(not(debug_assertions))]
+#[cfg(any(not(debug_assertions), test))]
 #[derive(Clone, Default)]
 struct SidecarState {
     child: Arc<Mutex<Option<Child>>>,
 }
 
-#[cfg(not(debug_assertions))]
+#[cfg(any(not(debug_assertions), test))]
 impl SidecarState {
-    fn stop(&self) {
+    fn stop(&self) -> bool {
         if let Some(mut child) = self.child.lock().expect("sidecar lock poisoned").take() {
             let _ = child.kill();
             let _ = child.wait();
+            true
+        } else {
+            false
         }
     }
 }
@@ -180,7 +187,8 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::response_is_ready;
+    use super::{response_is_ready, SidecarState};
+    use std::process::{Command, Stdio};
 
     #[test]
     fn readiness_requires_both_success_and_the_expected_instance() {
@@ -196,5 +204,30 @@ mod tests {
             "HTTP/1.1 404 Not Found\r\n\r\nabc-123",
             "abc-123"
         ));
+    }
+
+    #[test]
+    fn stopping_the_sidecar_terminates_and_reaps_the_child() {
+        #[cfg(unix)]
+        let child = Command::new("sleep")
+            .arg("30")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("spawn test child");
+
+        #[cfg(windows)]
+        let child = Command::new("ping")
+            .args(["-n", "30", "127.0.0.1"])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("spawn test child");
+
+        let state = SidecarState::default();
+        *state.child.lock().expect("sidecar lock poisoned") = Some(child);
+        assert!(state.stop());
+        assert!(state.child.lock().expect("sidecar lock poisoned").is_none());
+        assert!(!state.stop());
     }
 }

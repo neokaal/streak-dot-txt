@@ -1,26 +1,30 @@
 # Streak.txt desktop shell
 
-This is a deliberately thin Tauri wrapper. The product interface is served by
-the bundled local FastAPI server; Tauri provides the native application window
-and release packaging only.
+This is a thin Tauri wrapper around the bundled local FastAPI application.
+The repository [`README.md`](../README.md) is the authoritative guide for
+installation, development, testing, packaging, and version updates.
 
-## Development
+Cross-platform Python entry points:
 
-Run `./run-local.sh` from this directory. It starts the local server, opens the
-Tauri development window, and stops the server when the window exits. By
-default it uses `~/streaks`.
+```bash
+# Development window
+.env/bin/python desktop/run_local.py
 
-Set `STREAKS_DIR=/path/to/streaks` before the command only when deliberately
-using a different collection. Release builds start their bundled sidecar without
-an override, so they also use `~/streaks`.
+# Native bundles for the current OS
+.env/bin/python desktop/package_release.py
 
-## Release packaging
+# macOS .app only, without Finder-based DMG layout automation
+.env/bin/python desktop/package_release.py --bundles app
+```
 
-Run `./package-release.sh` on the operating system you are packaging for. It
-builds the Python sidecar, gives it Tauri's required platform-specific name,
-and creates the native installer. The installer is written under
-`src-tauri/target/release/bundle/`.
+The shell wrappers in this directory are Unix conveniences around those Python
+entry points.
 
-Build each target on its own operating system. The upcoming CI release workflow
-will build one artifact for macOS, Windows, and Linux; signing and notarization
-are separate release credentials, not part of ordinary local builds.
+Release builds use `~/streaks`, choose a free loopback port, verify that they
+connected to the sidecar from the current launch, and terminate that process on
+exit. Startup failures are shown in the window with the platform-specific
+location of `sidecar.log`.
+
+PyInstaller currently produces a single-file sidecar. Its extraction makes the
+first launch after installation slower than later launches; changing that
+layout requires a packaged-app verification pass on each target platform.

@@ -1,82 +1,38 @@
-# Streak API
+# Streak.txt local API
 
-A FastAPI-based REST API for managing streak.txt files.
+The FastAPI application exposes the shared `streak_core` service as a REST API
+and an HTMX interface. See the repository [`README.md`](../README.md) for the
+authoritative installation, launch, testing, and packaging workflows.
 
-## Features
+Run it from the repository root:
 
-- **GET /api/v1/streaks** - List all streaks from .txt files
-- **GET /api/v1/streaks/{name}** - Get specific streak details
-- **POST /api/v1/streaks** - Create a new streak
-- **PUT /api/v1/streaks/{name}** - Update streak metadata
-- **DELETE /api/v1/streaks/{name}** - Delete a streak
-- **POST /api/v1/streaks/{name}/tick** - Add today's tick to a streak
-- **POST /api/v1/streaks/{name}/ticks** - Add a custom tick to a streak
-- **GET /api/v1/streaks/{name}/stats** - Get streak statistics
-
-## Running the API
-
-### Option 1: Using the startup script
 ```bash
-python run_api.py
+.env/bin/python run_api.py
 ```
 
-### Option 2: Using uvicorn directly
+The application binds to `127.0.0.1:8000` and uses `~/streaks` unless
+`STREAKS_DIR` is deliberately set. Interactive API documentation is available
+at `http://127.0.0.1:8000/docs`.
+
+## Routes
+
+- `GET /api/v1/streaks`
+- `GET /api/v1/streaks/{id}`
+- `POST /api/v1/streaks`
+- `PUT /api/v1/streaks/{id}`
+- `DELETE /api/v1/streaks/{id}` (moves the file to `archive/`)
+- `POST /api/v1/streaks/{id}/tick`
+- `POST /api/v1/streaks/{id}/ticks`
+
+New streaks are stored as `streak-{id}.txt`. For example:
+
 ```bash
-uvicorn streak_api.main:app --reload
+curl -X POST http://127.0.0.1:8000/api/v1/streaks \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Morning walk","tick_type":"Daily"}'
+
+curl -X POST http://127.0.0.1:8000/api/v1/streaks/morning-walk/tick
 ```
 
-The API will be available at:
-- **Main API**: http://localhost:8000
-- **Interactive Documentation**: http://localhost:8000/docs
-- **Alternative Docs**: http://localhost:8000/redoc
-
-## Testing the API
-
-Run the test script to verify basic functionality:
-```bash
-python test_api.py
-```
-
-## API Usage Examples
-
-### Create a new streak
-```bash
-curl -X POST "http://localhost:8000/api/v1/streaks" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "name": "exercise",
-       "tick_type": "Daily",
-       "description": "Daily exercise routine"
-     }'
-```
-
-### Add today's tick
-```bash
-curl -X POST "http://localhost:8000/api/v1/streaks/exercise/tick"
-```
-
-### Get all streaks
-```bash
-curl "http://localhost:8000/api/v1/streaks"
-```
-
-### Get specific streak
-```bash
-curl "http://localhost:8000/api/v1/streaks/exercise"
-```
-
-## File Integration
-
-The API works directly with .txt files in the current directory:
-- Each streak is stored as `{name}.txt`
-- Files are loaded/saved using the existing `streak_core.file_operations` module
-- All existing streak.txt files are automatically accessible via the API
-
-## Dependencies
-
-The API uses your existing dependencies from `requirements.txt`:
-- `fastapi` - Web framework
-- `uvicorn` - ASGI server
-- `python-multipart` - For form data support
-
-All streak logic is handled by your existing `streak_core` module.
+The browser UI uses a bundled HTMX asset and does not require internet access.
+Write requests carrying a foreign browser `Origin` are rejected.

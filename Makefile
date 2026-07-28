@@ -1,12 +1,15 @@
 # declare the phony targets
-.PHONY: clean dist desktop-dist
+.PHONY: clean dist desktop-app desktop-dist
 
 dist:
 	@echo "Building binary in dist folder using pyinstaller"
 	pyinstaller --name=streakdottxt --noconfirm streakdottxt.py
 
 desktop-dist:
-	./desktop/package-release.sh
+	.env/bin/python desktop/package_release.py
+
+desktop-app:
+	.env/bin/python desktop/package_release.py --bundles app
 
 clean:
 	@echo "Cleaning up the dist folder"
