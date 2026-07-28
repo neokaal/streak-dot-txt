@@ -21,370 +21,1180 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Streak.txt - capture your streaks.</title>
-
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Streak.txt is a local-first desktop streak tracker backed by plain-text files."
+    />
+    <meta name="theme-color" content="#372a51" />
+    <title>Streak.txt — habits, kept in plain text</title>
     <style>
-      /* 
-      Table styling
-      Cells are left aligned,
-      header has a bottom border,
-      simple padding for cells
-      */
-      .version-history {
-        border-collapse: collapse;
-        margin: 2px;
-        padding: 0px;
+      :root {
+        --paper: #f5f6df;
+        --green: #5a8f78;
+        --blue: #3a5068;
+        --ink: #372a51;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 16px;
+        line-height: 1.55;
       }
 
-      .version-history th {
-        text-align: left;
-        border-bottom: 1px solid black;
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      a:focus-visible,
+      summary:focus-visible {
+        outline: 3px solid var(--green);
+        outline-offset: 3px;
+      }
+
+      code,
+      pre,
+      .eyebrow,
+      .status,
+      .button,
+      .nav-links,
+      .stat-label,
+      .tag,
+      .step-number,
+      .platform {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      code {
+        font-size: 0.9em;
+        font-weight: 700;
+      }
+
+      pre {
+        margin: 0;
+        overflow-x: auto;
+        font-size: 0.88rem;
+        line-height: 1.65;
+        tab-size: 2;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.08;
+      }
+
+      h1 {
+        max-width: 760px;
+        margin-bottom: 22px;
+        font-size: clamp(2.8rem, 8vw, 6.4rem);
+        letter-spacing: -0.07em;
+      }
+
+      h2 {
+        margin-bottom: 14px;
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        letter-spacing: -0.045em;
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-size: 1rem;
+      }
+
+      p {
+        margin-bottom: 16px;
+      }
+
+      .site-header,
+      main,
+      .site-footer {
+        width: min(1180px, calc(100% - 32px));
+        margin-inline: auto;
+      }
+
+      .site-header {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 58px;
+        margin-top: 16px;
+        border: 2px solid var(--ink);
+        padding: 8px 10px 8px 14px;
+        background: var(--green);
+        box-shadow: 5px 5px 0 var(--ink);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1rem;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 26px;
+        height: 26px;
+        place-items: center;
+        border: 2px solid var(--ink);
+        background: var(--paper);
+        box-shadow: inset 2px 2px 0 var(--blue);
+        font-size: 0.95rem;
+        line-height: 1;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .nav-links a {
+        padding: 5px 7px;
+        text-decoration: none;
+      }
+
+      .nav-links a:hover {
+        color: var(--paper);
+        background: var(--blue);
+      }
+
+      main {
+        border-inline: 2px solid var(--ink);
+        background: var(--paper);
+      }
+
+      section {
+        border-bottom: 2px solid var(--ink);
+        padding: clamp(54px, 8vw, 96px) clamp(20px, 5vw, 64px);
+        scroll-margin-top: 20px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(460px, 1.05fr);
+        gap: clamp(34px, 6vw, 74px);
+        align-items: center;
+        min-height: 650px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 18px;
+        border: 1px solid var(--ink);
+        padding: 3px 8px;
+        background: var(--green);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .hero-copy > p {
+        max-width: 630px;
+        font-size: clamp(1.05rem, 2vw, 1.3rem);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      .button {
+        display: inline-block;
+        border: 2px solid var(--ink);
+        padding: 10px 14px;
+        background: var(--paper);
+        box-shadow: 4px 4px 0 var(--ink);
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .button.primary {
+        color: var(--paper);
+        background: var(--blue);
+      }
+
+      .button:hover {
+        color: var(--ink);
+        background: var(--green);
+      }
+
+      .button:active {
+        box-shadow: 1px 1px 0 var(--ink);
+        transform: translate(3px, 3px);
+      }
+
+      .hero-note {
+        margin-top: 16px;
+        font-size: 0.78rem;
+      }
+
+      .app-window {
+        border: 2px solid var(--ink);
+        background: var(--paper);
+        box-shadow: 10px 10px 0 var(--ink);
+      }
+
+      .window-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid var(--ink);
+        padding: 7px 9px;
+        color: var(--paper);
+        background: var(--blue);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .window-controls {
+        display: flex;
+        gap: 5px;
+      }
+
+      .window-controls span {
+        width: 11px;
+        height: 11px;
+        border: 1px solid var(--paper);
+        background: var(--green);
+      }
+
+      .window-body {
         padding: 8px;
       }
 
-      .version-history td {
-        text-align: left;
-        padding: 8px;
+      .board-title,
+      .board-status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid var(--ink);
+        padding: 5px 7px;
+        font-size: 0.68rem;
+        font-weight: 800;
+      }
+
+      .board-title {
+        margin-bottom: 7px;
+        background: var(--green);
+      }
+
+      .board-status {
+        margin-top: 7px;
+        padding-block: 3px;
+        background: var(--green);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.58rem;
+      }
+
+      .mini-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .mini-streak {
+        min-width: 0;
+        border: 1px solid var(--ink);
+        padding: 7px;
+        box-shadow:
+          inset 2px 2px 0 var(--green),
+          inset -2px -2px 0 var(--blue);
+      }
+
+      .mini-streak.done {
+        background: var(--green);
+        box-shadow:
+          inset 2px 2px 0 var(--blue),
+          inset -2px -2px 0 var(--paper);
+      }
+
+      .mini-heading {
+        display: flex;
+        min-height: 34px;
+        justify-content: space-between;
+        gap: 5px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+
+      .tag {
+        align-self: start;
+        border: 1px solid var(--ink);
+        padding: 1px 3px;
+        font-size: 0.42rem;
+      }
+
+      .mini-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3px;
+        margin: 8px 0 7px;
+      }
+
+      .mini-stats span {
+        border-top: 1px solid var(--ink);
+        padding-top: 2px;
+        font-size: 0.59rem;
+        font-weight: 800;
+      }
+
+      .stat-label {
+        display: block;
+        font-style: normal;
+        font-size: 0.4rem;
+        text-transform: uppercase;
+      }
+
+      .tick {
+        width: 100%;
+        border: 1px solid var(--ink);
+        padding: 3px;
+        color: var(--paper);
+        background: var(--blue);
+        font-size: 0.58rem;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .done .tick {
+        color: var(--ink);
+        background: var(--paper);
+        box-shadow: inset 2px 2px 0 var(--ink);
+      }
+
+      .principle-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        padding: 0;
+      }
+
+      .principle {
+        min-height: 130px;
+        border-right: 2px solid var(--ink);
+        padding: 24px;
+        background: var(--green);
+      }
+
+      .principle:last-child {
+        border-right: 0;
+      }
+
+      .principle strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.88rem;
+      }
+
+      .principle span {
+        font-size: 0.78rem;
+      }
+
+      .section-heading {
+        max-width: 700px;
+        margin-bottom: 44px;
+      }
+
+      .section-heading p {
+        margin-bottom: 0;
+        font-size: 1.05rem;
+      }
+
+      .format-layout {
+        display: grid;
+        grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+        gap: 28px;
+        align-items: start;
+      }
+
+      .code-window {
+        border: 2px solid var(--ink);
+        background: var(--blue);
+        box-shadow: 7px 7px 0 var(--green);
+      }
+
+      .code-window .window-bar {
+        color: var(--ink);
+        background: var(--green);
+      }
+
+      .code-window pre {
+        padding: 24px;
+        color: var(--paper);
+      }
+
+      .format-points {
+        display: grid;
+        gap: 10px;
+      }
+
+      .format-point {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        border: 1px solid var(--ink);
+        background: var(--paper);
+      }
+
+      .step-number {
+        display: grid;
+        min-height: 70px;
+        place-items: center;
+        border-right: 1px solid var(--ink);
+        color: var(--paper);
+        background: var(--blue);
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+
+      .format-point div:last-child {
+        padding: 13px 16px;
+      }
+
+      .format-point p {
+        margin: 0;
+        font-size: 0.85rem;
+      }
+
+      .desktop-layout {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        gap: 48px;
+        align-items: start;
+      }
+
+      .feature-list {
+        display: grid;
+        border-top: 2px solid var(--ink);
+      }
+
+      .feature {
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        gap: 20px;
+        border-bottom: 1px solid var(--ink);
+        padding: 20px 0;
+      }
+
+      .feature strong {
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+      }
+
+      .feature p {
+        margin: 0;
+        font-size: 0.9rem;
+      }
+
+      .downloads {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+
+      .download-card {
+        display: flex;
+        min-height: 235px;
+        flex-direction: column;
+        border: 2px solid var(--ink);
+        padding: 22px;
+        background: var(--paper);
+        box-shadow: 6px 6px 0 var(--ink);
+      }
+
+      .download-card:nth-child(2) {
+        box-shadow: 6px 6px 0 var(--green);
+      }
+
+      .platform {
+        margin-bottom: 20px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .download-card h3 {
+        font-size: 1.35rem;
+      }
+
+      .download-card p {
+        flex: 1;
+        font-size: 0.82rem;
+      }
+
+      .download-card .button {
+        align-self: flex-start;
+      }
+
+      .install-note {
+        grid-column: 1 / -1;
+        border: 1px solid var(--ink);
+        padding: 12px 14px;
+        background: var(--green);
+        font-size: 0.78rem;
+      }
+
+      .cli-layout {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        gap: 48px;
+        align-items: start;
+      }
+
+      .terminal {
+        border: 2px solid var(--ink);
+        color: var(--paper);
+        background: var(--ink);
+        box-shadow: 8px 8px 0 var(--green);
+      }
+
+      .terminal .window-bar {
+        color: var(--ink);
+        background: var(--green);
+      }
+
+      .terminal pre {
+        min-height: 290px;
+        padding: 22px;
+      }
+
+      .prompt {
+        color: var(--green);
+      }
+
+      .command-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      details {
+        border: 1px solid var(--ink);
+        background: var(--paper);
+      }
+
+      summary {
+        cursor: pointer;
+        padding: 12px 14px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      details[open] summary {
+        border-bottom: 1px solid var(--ink);
+        color: var(--paper);
+        background: var(--blue);
+      }
+
+      details p {
+        margin: 0;
+        padding: 12px 14px;
+        font-size: 0.83rem;
+      }
+
+      .project {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 40px;
+        align-items: end;
+        color: var(--paper);
+        background: var(--blue);
+      }
+
+      .project p {
+        max-width: 680px;
+        margin-bottom: 0;
+      }
+
+      .project .button {
+        color: var(--ink);
+        background: var(--paper);
+      }
+
+      .site-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        border: 2px solid var(--ink);
+        border-top: 0;
+        padding: 22px;
+        background: var(--green);
+        font-size: 0.75rem;
+      }
+
+      .site-footer p {
+        margin: 0;
+      }
+
+      @media (max-width: 920px) {
+        .hero,
+        .format-layout,
+        .desktop-layout,
+        .cli-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          min-height: auto;
+        }
+
+        .app-window {
+          max-width: 650px;
+        }
+
+        .principle-strip {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .principle:nth-child(2) {
+          border-right: 0;
+        }
+
+        .principle:nth-child(-n + 2) {
+          border-bottom: 2px solid var(--ink);
+        }
+      }
+
+      @media (max-width: 640px) {
+        :root {
+          font-size: 15px;
+        }
+
+        .site-header,
+        main,
+        .site-footer {
+          width: min(100% - 18px, 1180px);
+        }
+
+        .site-header {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .nav-links {
+          width: 100%;
+          justify-content: space-between;
+          overflow-x: auto;
+        }
+
+        .nav-links a {
+          padding-inline: 2px;
+          white-space: nowrap;
+        }
+
+        section {
+          padding: 44px 18px;
+        }
+
+        h1 {
+          font-size: clamp(2.7rem, 16vw, 4.4rem);
+        }
+
+        .mini-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .mini-streak:nth-child(n + 5) {
+          display: none;
+        }
+
+        .principle-strip,
+        .downloads {
+          grid-template-columns: 1fr;
+        }
+
+        .principle {
+          min-height: auto;
+          border-right: 0;
+          border-bottom: 2px solid var(--ink);
+        }
+
+        .principle:nth-child(3) {
+          border-bottom: 2px solid var(--ink);
+        }
+
+        .principle:last-child {
+          border-bottom: 0;
+        }
+
+        .feature {
+          grid-template-columns: 1fr;
+          gap: 7px;
+        }
+
+        .download-card {
+          min-height: 215px;
+        }
+
+        .install-note {
+          grid-column: auto;
+        }
+
+        .project {
+          grid-template-columns: 1fr;
+          align-items: start;
+        }
+
+        .site-footer {
+          flex-direction: column;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Streak.txt</h1>
-    <b>Table of Contents</b>
-    <ul>
-      <li>
-        <a href="#intro">Introduction</a>
-      </li>
-      <li>
-        <a href="#usage">Usage</a>
-        <ul>
-          <li>
-            <a href="#entries">Entries</a>
-          </li>
-          <li>
-            <a href="#streak-name">Streak Name</a>
-          </li>
-        </ul>
-      </li>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Streak.txt home">
+        <span class="brand-mark" aria-hidden="true">✓</span>
+        <span>Streak.txt</span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#format">Format</a>
+        <a href="#desktop">Desktop</a>
+        <a href="#cli">CLI</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/abhishekmishra/streak-dot-txt">GitHub ↗</a>
+      </nav>
+    </header>
 
-      <li>
-        <a href="#tool">Streakdottxt - Reference Tool</a>
-        <ul>
-          <li>
-            <a href="#installation">Installation</a>
-          </li>
-          <li>
-            <a href="#commands">Commands</a>
-          </li>
-        </ul>
-      </li>
-      <li>
-        <a href="#applications">Web and Desktop Applications</a>
-      </li>
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Local-first streak tracker · v0.1.0</span>
+          <h1>Habits, kept in plain text.</h1>
+          <p>
+            A fast desktop switchboard for the things you do repeatedly.
+            Every streak is a readable file on your disk—not an account, a
+            subscription, or somebody else’s database.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#download">Download desktop app ↓</a>
+            <a class="button" href="#format">See the format →</a>
+          </div>
+          <p class="hero-note">
+            Free and open source · macOS Apple Silicon · Windows x64
+          </p>
+        </div>
 
-      <li>
-        <a href="#project">Project</a>
-        <ul>
-          <li>
-            <a href="#license">License</a>
-          </li>
-          <li>
-            <a href="#source">Source Code</a>
-          </li>
-          <li>
-            <a href="#goals">Project Goals</a>
-          </li>
-        </ul>
-      </li>
+        <div
+          class="app-window"
+          role="img"
+          aria-label="A compact Streak.txt desktop switchboard with six fixed-position streak controls"
+        >
+          <div class="window-bar">
+            <span>Streak.txt — Today</span>
+            <span class="window-controls" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+          </div>
+          <div class="window-body">
+            <div class="board-title">
+              <span>YOUR STREAKS</span>
+              <span>2 / 6 DONE</span>
+            </div>
+            <div class="mini-grid">
+              <article class="mini-streak done">
+                <div class="mini-heading">
+                  <span>Meditation Practice</span><span class="tag">DAILY</span>
+                </div>
+                <div class="mini-stats">
+                  <span><i class="stat-label">Now</i>14</span>
+                  <span><i class="stat-label">Best</i>19</span>
+                  <span><i class="stat-label">Rate</i>72%</span>
+                </div>
+                <div class="tick">✓ DONE</div>
+              </article>
+              <article class="mini-streak">
+                <div class="mini-heading">
+                  <span>Gesture Drawing</span><span class="tag">DAILY</span>
+                </div>
+                <div class="mini-stats">
+                  <span><i class="stat-label">Now</i>3</span>
+                  <span><i class="stat-label">Best</i>11</span>
+                  <span><i class="stat-label">Rate</i>61%</span>
+                </div>
+                <div class="tick">+ TICK</div>
+              </article>
+              <article class="mini-streak">
+                <div class="mini-heading">
+                  <span>Journal Entry</span><span class="tag">DAILY</span>
+                </div>
+                <div class="mini-stats">
+                  <span><i class="stat-label">Now</i>8</span>
+                  <span><i class="stat-label">Best</i>13</span>
+                  <span><i class="stat-label">Rate</i>84%</span>
+                </div>
+                <div class="tick">+ TICK</div>
+              </article>
+              <article class="mini-streak">
+                <div class="mini-heading">
+                  <span>Jumping Jacks</span><span class="tag">DAILY</span>
+                </div>
+                <div class="mini-stats">
+                  <span><i class="stat-label">Now</i>5</span>
+                  <span><i class="stat-label">Best</i>16</span>
+                  <span><i class="stat-label">Rate</i>76%</span>
+                </div>
+                <div class="tick">+ TICK</div>
+              </article>
+              <article class="mini-streak done">
+                <div class="mini-heading">
+                  <span>Morning Walk</span><span class="tag">DAILY</span>
+                </div>
+                <div class="mini-stats">
+                  <span><i class="stat-label">Now</i>225</span>
+                  <span><i class="stat-label">Best</i>225</span>
+                  <span><i class="stat-label">Rate</i>94%</span>
+                </div>
+                <div class="tick">✓ DONE</div>
+              </article>
+              <article class="mini-streak">
+                <div class="mini-heading">
+                  <span>Practice Harmonica</span><span class="tag">DAILY</span>
+                </div>
+                <div class="mini-stats">
+                  <span><i class="stat-label">Now</i>2</span>
+                  <span><i class="stat-label">Best</i>9</span>
+                  <span><i class="stat-label">Rate</i>44%</span>
+                </div>
+                <div class="tick">+ TICK</div>
+              </article>
+            </div>
+            <div class="board-status">
+              <span>~/streaks</span><span>LOCAL · OFFLINE</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <li>
-        <a href="#history">History of this page</a>
-      </li>
-    </ul>
-    <h2 id="intro">Introduction</h2>
-    <p>
-      Streak.txt is a simple tool to capture your streaks. Each streak is
-      tracked in a plain text file that you can edit with your favourite text
-      editor. You can use it to capture your streaks, habits, or anything else
-      you want to track.
-    </p>
+      <section class="principle-strip" aria-label="Product principles">
+        <div class="principle">
+          <strong>01 / Plain files</strong>
+          <span>Open them in any editor. Back them up however you like.</span>
+        </div>
+        <div class="principle">
+          <strong>02 / No account</strong>
+          <span>The application runs locally and does not need a cloud service.</span>
+        </div>
+        <div class="principle">
+          <strong>03 / Fixed places</strong>
+          <span>Controls stay put, so daily use becomes muscle memory.</span>
+        </div>
+        <div class="principle">
+          <strong>04 / One honest action</strong>
+          <span>Did the thing? Add the date. Missed it? Add nothing.</span>
+        </div>
+      </section>
 
-    <i>
-      The applications use <code>~/streaks</code> by default. The format itself
-      remains plain text and can be edited without the applications.
-    </i>
-
-    <h2 id="usage">Usage</h2>
-    <p>
-      To use Streak.txt, simply create a new plain text file in your favorite
-      text editor and start capturing your streaks.
-    </p>
-    <p>
-      <b>
-        Suggestion #1: name your streak file "streak-&lt;activity&gt;.txt", for
-        example streak-jumpingjacks.txt
-      </b>
-    </p>
-    <p>
-      <b>
-        Suggestion #2: keep all your streak files in one directory. The
-        reference tool assumes your default streak files folder is "~/streaks"
-      </b>
-    </p>
-    <p>
-      Each line in the file represents a day. You can use any text editor to
-      edit the file, including Notepad, TextEdit, or any other text editor.
-    </p>
-
-    <h3 id="entries">Entries</h3>
-    <div>
-      <p>
-        Each day you complete the task, add the date to the file. For example:
-      </p>
-
-      <pre>
-2021-01-01
-2021-01-03
-2021-01-04
-    </pre
-      >
-
-      <p>
-        You can see in the example above that the task was completed on January
-        1st, 3rd, and 4th, but not on January 2nd.
-      </p>
-
-      <p>
-        <b> Note: The date is in ISO 8601 format (YYYY-MM-DD). </b>
-      </p>
-    </div>
-
-    <h3 id="streak-name">Streak Name</h3>
-
-    <p>
-      If you want to give a nice name to your streak, you can add a metadata
-      block at the beginning of the file. The metadata block is a YAML front
-      matter block. Here is an example:
-    </p>
-    <pre>
----
+      <section id="format">
+        <div class="section-heading">
+          <span class="eyebrow">The durable part</span>
+          <h2>The file is the product.</h2>
+          <p>
+            One streak, one file. A small metadata header says what you are
+            tracking; every line after it records a completed period.
+          </p>
+        </div>
+        <div class="format-layout">
+          <div class="code-window">
+            <div class="window-bar">
+              <span>streak-jumping-jacks.txt</span>
+              <span>UTF-8</span>
+            </div>
+            <pre><code>---
 name: Jumping Jacks
 tick: Daily
 ---
-2021-01-01
-2021-01-03
-2021-01-04
-    </pre>
+2026-07-25
+2026-07-26
+2026-07-28</code></pre>
+          </div>
+          <div class="format-points">
+            <article class="format-point">
+              <span class="step-number">01</span>
+              <div>
+                <h3>Readable without Streak.txt</h3>
+                <p>
+                  The format is ordinary text with a short YAML-style header.
+                  Notepad, TextEdit, Vim, and your future self can all read it.
+                </p>
+              </div>
+            </article>
+            <article class="format-point">
+              <span class="step-number">02</span>
+              <div>
+                <h3>Append when completed</h3>
+                <p>
+                  Dates use ISO 8601: <code>YYYY-MM-DD</code>. There is no
+                  “failed” entry; a missing date already says the task was not done.
+                </p>
+              </div>
+            </article>
+            <article class="format-point">
+              <span class="step-number">03</span>
+              <div>
+                <h3>Your directory, your history</h3>
+                <p>
+                  Files live in <code>~/streaks</code> by default. Copy, sync,
+                  diff, or version them with tools you already trust.
+                </p>
+              </div>
+            </article>
+            <article class="format-point">
+              <span class="step-number">04</span>
+              <div>
+                <h3>Small enough to last</h3>
+                <p>
+                  The desktop app and CLI share the same parser and rules.
+                  Neither owns the data; both are views onto it.
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
 
-    <div id="tool">
-      <h2>Streakdottxt - Reference Tool</h2>
+      <section id="desktop">
+        <div class="desktop-layout">
+          <div>
+            <span class="eyebrow">The everyday view</span>
+            <h2>A switchboard, not a dashboard.</h2>
+            <p>
+              Streak.txt is designed to be opened, used, and closed several
+              times a day. The interface stays dense and predictable so your
+              eyes and hands learn where each practice lives.
+            </p>
+          </div>
+          <div class="feature-list">
+            <article class="feature">
+              <strong>Fixed grid</strong>
+              <p>
+                Up to 25 streak controls fit in the standard window. Ticking
+                one never reorders or resizes the others.
+              </p>
+            </article>
+            <article class="feature">
+              <strong>One click</strong>
+              <p>
+                Each control puts today’s tick in the same place, with a clear
+                pressed state after completion.
+              </p>
+            </article>
+            <article class="feature">
+              <strong>Useful stats</strong>
+              <p>
+                Current streak, personal best, and completion rate stay visible
+                without taking over the task.
+              </p>
+            </article>
+            <article class="feature">
+              <strong>Portable order</strong>
+              <p>
+                Control order is stored beside the streak files, so the
+                arrangement travels with the collection.
+              </p>
+            </article>
+            <article class="feature">
+              <strong>Offline</strong>
+              <p>
+                The desktop package includes everything it needs and its local
+                service accepts connections only from your computer.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="download">
+        <div class="section-heading">
+          <span class="eyebrow">Hearth Pheasant · v0.1.0</span>
+          <h2>Download the desktop app.</h2>
+          <p>
+            The first release is available for Apple Silicon Macs and 64-bit
+            Windows. Your streak files remain in place when the app is removed.
+          </p>
+        </div>
+        <div class="downloads">
+          <article class="download-card">
+            <span class="platform">macOS 11+ · Apple Silicon</span>
+            <h3>Streak.txt for Mac</h3>
+            <p>
+              An ad-hoc-signed, unnotarized DMG. After copying the app, macOS
+              requires a one-time approval in Privacy &amp; Security.
+            </p>
+            <a
+              class="button primary"
+              href="https://github.com/abhishekmishra/streak-dot-txt/releases/download/v0.1.0/Streak.txt_0.1.0_aarch64.dmg"
+              >Download .dmg ↓</a
+            >
+          </article>
+          <article class="download-card">
+            <span class="platform">Windows · x64</span>
+            <h3>Streak.txt for Windows</h3>
+            <p>
+              An unsigned NSIS installer. Microsoft Defender SmartScreen may
+              ask you to confirm before installation.
+            </p>
+            <a
+              class="button primary"
+              href="https://github.com/abhishekmishra/streak-dot-txt/releases/download/v0.1.0/Streak.txt_0.1.0_x64-setup.exe"
+              >Download .exe ↓</a
+            >
+          </article>
+          <div class="install-note">
+            <strong>Why the warnings?</strong> This independent open-source
+            release does not use corporate Apple credentials or a Windows
+            code-signing certificate. Verify downloads with
+            <a
+              href="https://github.com/abhishekmishra/streak-dot-txt/releases/download/v0.1.0/SHA256SUMS.txt"
+              >SHA256SUMS.txt</a
+            >.
+          </div>
+        </div>
+      </section>
+
+      <section id="cli">
+        <div class="cli-layout">
+          <div>
+            <span class="eyebrow">The reference tool</span>
+            <h2>The same streaks, from your terminal.</h2>
+            <p>
+              The Python CLI is both a practical companion and the reference
+              implementation of the format. Point it at the same directory and
+              it sees exactly what the desktop app sees.
+            </p>
+            <p>
+              The commands here use macOS/Linux paths. On Windows, use
+              <code>.env\Scripts\python</code>. See the
+              <a href="https://github.com/abhishekmishra/streak-dot-txt#readme"
+                >README</a
+              >
+              for the complete development setup.
+            </p>
+            <div class="command-list">
+              <details>
+                <summary>list — see every streak</summary>
+                <p>
+                  Shows each streak’s schedule, current run, and whether today
+                  is already ticked.
+                </p>
+              </details>
+              <details>
+                <summary>new — create a streak</summary>
+                <p>
+                  Creates a safely named <code>streak-&lt;id&gt;.txt</code>
+                  file with metadata.
+                </p>
+              </details>
+              <details>
+                <summary>tick — record today</summary>
+                <p>
+                  Fuzzy-match a streak by name and append today’s date.
+                  <code>mark</code> is an alias.
+                </p>
+              </details>
+              <details>
+                <summary>view — inspect history</summary>
+                <p>
+                  Displays totals, current and longest streaks, plus a calendar
+                  view of the selected practice.
+                </p>
+              </details>
+            </div>
+          </div>
+          <div class="terminal" aria-label="Command line example">
+            <div class="window-bar">
+              <span>streaks — shell</span>
+              <span>80 × 24</span>
+            </div>
+            <pre><code><span class="prompt">$</span> python3 -m venv .env
+<span class="prompt">$</span> .env/bin/python -m pip install \
+    -c requirements.lock -r requirements-dev.txt
+
+<span class="prompt">$</span> .env/bin/python streakdottxt.py list
+
+STREAKS
+────────────────────────────────────────
+NAME              NOW   BEST   TODAY
+Meditation          14     19   Ticked
+Gesture Drawing     3     11   Not ticked
+Journal Entry       8     13   Not ticked
+Morning Walk        25     31   Ticked
+
+<span class="prompt">$</span> .env/bin/python streakdottxt.py tick \
+    --name "journal"
+Ticked Journal Entry for today.</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="project">
+        <div>
+          <span class="eyebrow">Open source · MIT</span>
+          <h2>Small software. Legible data.</h2>
+          <p>
+            Streak.txt is built in the open. Read the source, report a problem,
+            or make the plain-text format useful in a tool of your own.
+          </p>
+        </div>
+        <a class="button" href="https://github.com/abhishekmishra/streak-dot-txt"
+          >View source on GitHub ↗</a
+        >
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Streak.txt · Copyright © 2025–2026 Abhishek Mishra</p>
       <p>
-        The reference tool is a simple command line tool that can be used to
-        manage your streaks. The tool is written in Python and is available on
-        Github.
+        <a href="https://github.com/abhishekmishra/streak-dot-txt/blob/main/LICENSE"
+          >MIT License</a
+        >
+        ·
+        <a href="https://github.com/abhishekmishra/streak-dot-txt/releases"
+          >All releases</a
+        >
       </p>
-      <p>It serves two purposes:</p>
-      <ol>
-        <li>
-          Reference implementation: Clarifies the file format, especially any
-          undocumented decisions which might later become part of the file
-          format.
-        </li>
-        <li>
-          Utility: Provides a simple command line interface to manage your
-          streaks.
-        </li>
-      </ol>
-
-      <div id="installation">
-        <h3>Installation</h3>
-        <p>
-          The tool is available on Github. You can clone the repository and run
-          the tool from the command line.
-        </p>
-        <pre>
-git clone https://github.com/abhishekmishra/streak-dot-txt.git
-cd streak-dot-txt
-python3 -m venv .env
-.env/bin/python -m pip install -c requirements.lock -r requirements-dev.txt
-.env/bin/python streakdottxt.py --help
-        </pre>
-        <p>
-          Windows users should use <code>.env\Scripts\python</code>. See the
-          repository README for the complete development and packaging guide.
-        </p>
-      </div>
-
-      <div id="commands">
-        <h3>Commands</h3>
-        <p>
-          The tool provides the following commands. You can get more information
-          about each command by running the command with the "--help" flag.
-        </p>
-        <ul>
-          <li>
-            <b>list</b>: List all the streak files in the streaks directory.
-            <pre>python streakdottxt.py list</pre>
-            <pre>
-Streaks                                 
-
-Name                          Tick    Current Streak   Today's Status 
-───────────────────────────────────────────────────────────────────────
-Gesture Drawing Practice      Daily   1                Ticked
-Journal Entry                 Daily   4                Not Ticked
-Jumping Jacks                 Daily   1                Ticked
-Practice Digital Art          Daily   0                Not Ticked
-Practice Figure Drawing       Daily   1                Ticked
-Practice Landscape Drawing    Daily   0                Not Ticked
-Practice Portrait Drawing     Daily   1                Ticked
-Practice Still Life Drawing   Daily   1                Ticked
-Programming/Coding            Daily   1                Ticked
-            </pre>
-          </li>
-          <li>
-            <b>new</b>: Create a new streak file with the given name.
-            <pre>python streakdottxt.py new --name "Jumping Jacks"</pre>            
-          </li>
-          <li>
-            <b>view (Default)</b>: Show the streak details for the streak given
-            by the file or name option.
-            <pre>python streakdottxt.py view --name jumping</pre>
-            <pre>
-Name [Jumping Jacks]
-Tick [Daily]
-
-        Streak Stats       
-
-    Stat             Value 
-    ────────────────────────
-    Total Days       1
-    Ticked Days      1
-    Unticked Days    0
-    Current Streak   1
-    Longest Streak   1
-
-
-                            January 2025                          
-
-    Sun      Mon      Tue      Wed      Thu      Fri      Sat   
-    ──────────────────────────────────────────────────────────────
-                        1 [✖]    2 [✖]    3 [✖]    4 [✖]    5 [✓]
-    6 [-]    7 [-]    8 [-]    9 [-]   10 [-]   11 [-]   12 [-]
-    13 [-]   14 [-]   15 [-]   16 [-]   17 [-]   18 [-]   19 [-]
-    20 [-]   21 [-]   22 [-]   23 [-]   24 [-]   25 [-]   26 [-]
-    27 [-]   28 [-]   29 [-]   30 [-]   31 [-]                
-          </li>
-          <li>
-            <b>tick</b>: Add a tick to the streak file marking today's date.
-            <pre>python streakdottxt.py tick --name jumping</pre>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <div id="applications">
-      <h2>Web and Desktop Applications</h2>
-      <p>
-        Release 0.1.0, codename <b>Hearth Pheasant</b>, adds a local FastAPI and
-        HTMX web application plus a cross-platform Tauri desktop shell. Both use
-        the same service layer and plain-text streak files as the CLI.
-      </p>
-      <p>
-        Run the local web application with <code>make run-api</code>, or the
-        Tauri development window with <code>make run-desktop</code>. The HTMX
-        asset is bundled, so the interface works offline.
-      </p>
-      <p>
-        Full testing, packaging, and platform-specific instructions live in the
-        <a href="https://github.com/abhishekmishra/streak-dot-txt#readme"
-          >repository README</a
-        >.
-      </p>
-    </div>
-
-    <div id="project">
-      <h2>Project</h2>
-
-      <p>
-        The project contains the source code for the reference tool as well as
-        the documentation (this page) which defines the format.
-      </p>
-
-      <div id="license">
-        <h3>License</h3>
-        <p>
-          The project (documentation and the reference implementation) is
-          licensed under the MIT License. You can find the license in the source
-          code repository.
-        </p>
-      </div>
-
-      <div id="source">
-        <h3>Source Code</h3>
-        <p>
-          Source code repository
-          <a href="https://github.com/abhishekmishra/streak-dot-txt"
-            >streak-dot-txt (Github)</a
-          >.
-        </p>
-      </div>
-      <div id="goals">
-        <h3>Project Goals</h3>
-        <ol>
-          <li>Track one streak per file.</li>
-          <li>Changes to file are append only.</li>
-          <li>Each streak file has some metadata.</li>
-          <li>We can specify a name for the streak such as "Draw daily".</li>
-          <li>
-            We can specify the period of the streak such as "Monthly" or
-            "Weekly".
-          </li>
-          <li>
-            We can specify the tick of the streak such as "Daily" or "Hourly".
-            The tick has to be a smaller time measure than the period.
-          </li>
-          <li>
-            We can specify the expected frequency of the streak such as "10
-            times", "7 times" etc.
-          </li>
-          <li>
-            No entry is required when task is not done. In fact a missing entry
-            qualifies as "Not done".
-          </li>
-          <li>
-            We can specify an optional quantity when making an entry when task
-            is done.
-          </li>
-          <li>We can specify an optional comment when making an entry.</li>
-          <li>The comment can contain hyperlinks.</li>
-        </ol>
-      </div>
-    </div>
-
-    <div id="history">
-      <h2>History of this page</h2>
-      <table class="version-history">
-        <tr>
-          <th>Date</th>
-          <th>Changes</th>
-          <th>Author</th>
-        </tr>
-        <tr>
-          <td>2026-07-28</td>
-          <td>Documented the 0.1.0 local web and Tauri desktop applications</td>
-          <td>Abhishek (<a href="https://neolateral.in">neolateral.in</a>)</td>
-        </tr>
-        <tr>
-          <td>2025-01-05</td>
-          <td>Initial version</td>
-          <td>Abhishek (<a href="https://neolateral.in">neolateral.in</a>)</td>
-        </tr>
-      </table>
-    </div>
+    </footer>
   </body>
 </html>
