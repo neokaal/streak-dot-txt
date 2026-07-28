@@ -78,3 +78,31 @@ checked here until they are moved into release notes or archived.
 - [x] Document the supported local, desktop development, and distribution workflows in one authoritative location.
 - [x] Update stale API documentation to match the current `streak-{id}.txt` storage convention.
 - [x] Decide which generated Tauri files and release artifacts belong in version control and ignore the remainder.
+
+### Release Enablement - One-Time
+
+- [ ] Generate and configure production application icons for macOS and Windows.
+- [ ] Finalize bundle metadata, including the application identifier, displayed version, and minimum supported macOS version.
+- [ ] Restrict initial release artifacts to a macOS Apple Silicon DMG and a Windows x64 NSIS installer.
+- [ ] Add a GitHub Actions workflow that runs checks, builds each platform's native Python sidecar, and creates a draft GitHub Release from a version tag.
+- [ ] Generate and attach SHA-256 checksums for every release artifact.
+- [ ] Configure Apple Developer ID signing and notarization through protected GitHub repository secrets.
+- [ ] Verify the macOS DMG passes signature, notarization, and Gatekeeper checks.
+- [ ] Document supported platforms, installation, the streak data location, and the expected SmartScreen warning for the unsigned Windows installer.
+- [ ] Document the tag-to-draft-to-publish release workflow for maintainers.
+- [ ] Create `CHANGELOG.md` in the established Semantic Versioning format and add the initial `0.1.0` release entry.
+
+### Release Checklist - Copy Into Every Release
+
+- [ ] Confirm the release scope is complete and all intended backlog items are checked.
+- [ ] Update the version everywhere using the repository's version-update process.
+- [ ] Add the completed release at the top of `CHANGELOG.md` with its version, release date, maintainer, and concise user-facing changes.
+- [ ] Update user-facing documentation and prepare concise GitHub release notes from the changelog entry.
+- [ ] Run the complete automated check suite from a clean working tree.
+- [ ] Push the release commit and create the matching version tag.
+- [ ] Confirm GitHub Actions produces the macOS Apple Silicon DMG, Windows x64 installer, and checksum file in a draft release.
+- [ ] Install the macOS build on a clean machine and verify signing, notarization, launch, ticking, persistence, restart, and uninstall behavior.
+- [ ] Install the Windows build on a clean machine or virtual machine and verify installation, launch, ticking, persistence, restart, and uninstall behavior.
+- [ ] Confirm uninstalling either application does not remove the user's streak files.
+- [ ] Review the draft release notes and download links, then publish the release.
+- [ ] Open the next release section and copy this release checklist into it.
