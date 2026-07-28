@@ -23,6 +23,7 @@ def test_sidecar_builder_uses_the_active_python_and_platform_data_separator(
     command, options = calls[0]
     assert command[:3] == [sys.executable, "-m", "PyInstaller"]
     assert "--onedir" in command
+    assert ("--hide-console" in command) is (os.name == "nt")
     for excluded_module in (
         "PIL",
         "rich",
@@ -44,6 +45,17 @@ def test_sidecar_builder_uses_the_active_python_and_platform_data_separator(
         / "streak-server"
         / f"streak-server{expected_suffix}"
     )
+
+
+def test_windows_sidecar_hides_its_console_without_removing_standard_streams():
+    command = package_sidecar.pyinstaller_command(windows=True)
+
+    console_option = command.index("--hide-console")
+    assert command[console_option : console_option + 2] == [
+        "--hide-console",
+        "hide-early",
+    ]
+    assert "--noconsole" not in command
 
 
 def test_release_builder_copies_the_target_sidecar_and_forwards_bundle_choice(

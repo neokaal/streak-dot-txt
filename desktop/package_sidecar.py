@@ -12,7 +12,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DESKTOP_DIR = PROJECT_ROOT / "desktop"
 
 
-def build_sidecar() -> Path:
+def pyinstaller_command(*, windows: bool | None = None) -> list[str]:
+    if windows is None:
+        windows = os.name == "nt"
     output_directory = DESKTOP_DIR / "dist"
     command = [
         sys.executable,
@@ -49,9 +51,16 @@ def build_sidecar() -> Path:
         str(PROJECT_ROOT / "build" / "desktop-sidecar"),
         str(DESKTOP_DIR / "server.py"),
     ]
+    if windows:
+        command[5:5] = ["--hide-console", "hide-early"]
+    return command
+
+
+def build_sidecar() -> Path:
+    command = pyinstaller_command()
     subprocess.run(command, check=True, cwd=PROJECT_ROOT)
     suffix = ".exe" if os.name == "nt" else ""
-    return output_directory / "streak-server" / f"streak-server{suffix}"
+    return DESKTOP_DIR / "dist" / "streak-server" / f"streak-server{suffix}"
 
 
 if __name__ == "__main__":
