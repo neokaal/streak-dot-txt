@@ -236,6 +236,11 @@ def test_dashboard_and_htmx_fragment_are_rendered_without_browser(client):
     page = client.get("/")
     assert page.status_code == 200
     assert "Journal" in page.text
+    assert 'src="/static/htmx.min.js"' in page.text
+    assert "unpkg.com" not in page.text
+    htmx = client.get("/static/htmx.min.js")
+    assert htmx.status_code == 200
+    assert len(htmx.content) > 50_000
     card = client.post("/ui/streaks/journal/tick")
     assert card.status_code == 200
     expected_dom_id = f"streak-{sha256(b'journal').hexdigest()[:16]}"

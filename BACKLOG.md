@@ -32,7 +32,7 @@ checked here until they are moved into release notes or archived.
 
 ### Web Application
 
-- [ ] Bundle HTMX with the application so the desktop UI remains fully functional offline.
+- [x] Bundle HTMX with the application so the desktop UI remains fully functional offline.
 
 ### Streak and Statistics Correctness
 
