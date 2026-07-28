@@ -52,7 +52,7 @@ def pyinstaller_command(*, windows: bool | None = None) -> list[str]:
         str(DESKTOP_DIR / "server.py"),
     ]
     if windows:
-        command[5:5] = ["--hide-console", "hide-early"]
+        command.insert(5, "--noconsole")
     return command
 
 

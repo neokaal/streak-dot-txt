@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import pytest
 
-from desktop import measure_startup, package_release, package_sidecar
+from desktop import measure_startup, package_release, package_sidecar, server
 from scripts.set_version import set_version
 
 
@@ -23,7 +24,8 @@ def test_sidecar_builder_uses_the_active_python_and_platform_data_separator(
     command, options = calls[0]
     assert command[:3] == [sys.executable, "-m", "PyInstaller"]
     assert "--onedir" in command
-    assert ("--hide-console" in command) is (os.name == "nt")
+    assert ("--noconsole" in command) is (os.name == "nt")
+    assert "--hide-console" not in command
     for excluded_module in (
         "PIL",
         "rich",
@@ -47,15 +49,29 @@ def test_sidecar_builder_uses_the_active_python_and_platform_data_separator(
     )
 
 
-def test_windows_sidecar_hides_its_console_without_removing_standard_streams():
+def test_windows_sidecar_uses_the_windowed_bootloader():
     command = package_sidecar.pyinstaller_command(windows=True)
 
-    console_option = command.index("--hide-console")
-    assert command[console_option : console_option + 2] == [
-        "--hide-console",
-        "hide-early",
-    ]
-    assert "--noconsole" not in command
+    assert "--noconsole" in command
+    assert "--hide-console" not in command
+
+
+def test_windows_sidecar_redirects_standard_streams_to_its_log(
+    tmp_path,
+    monkeypatch,
+):
+    log_path = tmp_path / "sidecar.log"
+    fake_sys = SimpleNamespace(stdout=None, stderr=None)
+    monkeypatch.setattr(server, "sys", fake_sys)
+    monkeypatch.setenv("STREAK_LOG_PATH", str(log_path))
+
+    stream = server.configure_sidecar_logging(windows=True)
+    fake_sys.stderr.write("startup detail\n")
+    stream.close()
+
+    assert fake_sys.stdout is stream
+    assert fake_sys.stderr is stream
+    assert log_path.read_text() == "startup detail\n"
 
 
 def test_release_builder_copies_the_target_sidecar_and_forwards_bundle_choice(

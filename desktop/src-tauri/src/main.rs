@@ -112,6 +112,7 @@ fn start_local_server(
     let child = Command::new(sidecar)
         .env("STREAK_PORT", port.to_string())
         .env("STREAK_INSTANCE_TOKEN", &token)
+        .env("STREAK_LOG_PATH", &log_path)
         .stdout(Stdio::from(stdout))
         .stderr(Stdio::from(stderr))
         .spawn()?;
