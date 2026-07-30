@@ -459,4 +459,4 @@ def test_release_version_is_consistent_across_python_and_desktop_manifests():
         npm_lock["version"],
         npm_lock["packages"][""]["version"],
         cargo_lock_version.group(1),
-    } == {"0.1.0"}
+    } == {__version__}

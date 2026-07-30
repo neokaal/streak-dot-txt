@@ -16,6 +16,18 @@ checked here until they are moved into release notes or archived.
 - [x] Replace the external Rust setup action with a repository-owned, pinned Rust toolchain definition.
 - [x] Move the public project site to `neokaal.com/open/streakdottxt/` and retire GitHub Pages hosting.
 
+### Release Checklist
+
+- [x] Confirm the release scope is complete and all intended backlog items are checked.
+- [x] Update the version everywhere using the repository's version-update process.
+- [x] Add the completed release at the top of `CHANGELOG.md`.
+- [x] Update user-facing documentation for the release.
+- [x] Run the complete automated check suite from a clean working tree.
+- [ ] Push the release commit and create the matching version tag.
+- [ ] Confirm GitHub Actions produces both installers and the checksum file in a draft release.
+- [ ] Verify the draft release assets and checksums.
+- [ ] Publish the release.
+
 ## Unplanned
 
 ### Automated Testing
