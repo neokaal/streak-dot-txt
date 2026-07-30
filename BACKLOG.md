@@ -12,6 +12,14 @@ checked here until they are moved into release notes or archived.
 - [x] Update repository, release-download, and GitHub Pages links to their new NeokaaL locations.
 - [x] Restrict GitHub Actions write access to release-publishing jobs and pin every action to an immutable commit.
 - [x] Configure Dependabot to propose reviewed updates for pinned GitHub Actions.
+- [x] Restrict repository Actions policy to SHA-pinned GitHub-authored actions only.
+- [x] Replace the external Rust setup action with a repository-owned, pinned Rust toolchain definition.
+
+## Unplanned
+
+### Automated Testing
+
+- [ ] Run the complete check suite automatically on pushes to `main` and on pull requests.
 
 ## v0.1.0 - Hearth Pheasant
 
