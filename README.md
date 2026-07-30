@@ -5,7 +5,7 @@ It presents your streaks as a compact, fixed-position switchboard while keeping
 the underlying data in readable text files on your disk.
 
 [Download the latest release](https://github.com/neokaal/streak-dot-txt/releases/latest)
-· [Project site and format guide](https://neokaal.github.io/streak-dot-txt/)
+· [Project site and format guide](https://neokaal.com/open/streakdottxt/)
 
 ## The format
 

@@ -14,6 +14,7 @@ checked here until they are moved into release notes or archived.
 - [x] Configure Dependabot to propose reviewed updates for pinned GitHub Actions.
 - [x] Restrict repository Actions policy to SHA-pinned GitHub-authored actions only.
 - [x] Replace the external Rust setup action with a repository-owned, pinned Rust toolchain definition.
+- [x] Move the public project site to `neokaal.com/open/streakdottxt/` and retire GitHub Pages hosting.
 
 ## Unplanned
 
