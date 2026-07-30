@@ -4,8 +4,8 @@ Streak.txt is a local-first desktop tracker for repeated practices and routines.
 It presents your streaks as a compact, fixed-position switchboard while keeping
 the underlying data in readable text files on your disk.
 
-[Download the latest release](https://github.com/abhishekmishra/streak-dot-txt/releases/latest)
-· [Project site and format guide](https://abhishekmishra.github.io/streak-dot-txt/)
+[Download the latest release](https://github.com/neokaal/streak-dot-txt/releases/latest)
+· [Project site and format guide](https://neokaal.github.io/streak-dot-txt/)
 
 ## The format
 

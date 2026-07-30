@@ -4,6 +4,13 @@ This backlog tracks upcoming work in release-sized groups, with the newest
 planned release at the top and older releases below it. Keep completed items
 checked here until they are moved into release notes or archived.
 
+## v0.1.1
+
+### Repository Transfer
+
+- [x] Update the local Git remote from the personal repository to `neokaal/streak-dot-txt`.
+- [x] Update repository, release-download, and GitHub Pages links to their new NeokaaL locations.
+
 ## v0.1.0 - Hearth Pheasant
 
 ### Data Integrity and File Handling

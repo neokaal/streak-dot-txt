@@ -231,7 +231,7 @@ This structure ensures that all data manipulation and business logic are central
 
 ## 9. References
 
-- [streak-dot-txt GitHub](https://github.com/abhishekmishra/streak-dot-txt)
+- [streak-dot-txt GitHub](https://github.com/neokaal/streak-dot-txt)
 - [index.html documentation](docs/index.html)
 
 ---
