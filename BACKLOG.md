@@ -23,9 +23,9 @@ checked here until they are moved into release notes or archived.
 - [x] Add the completed release at the top of `CHANGELOG.md`.
 - [x] Update user-facing documentation for the release.
 - [x] Run the complete automated check suite from a clean working tree.
-- [ ] Push the release commit and create the matching version tag.
-- [ ] Confirm GitHub Actions produces both installers and the checksum file in a draft release.
-- [ ] Verify the draft release assets and checksums.
+- [x] Push the release commit and create the matching version tag.
+- [x] Confirm GitHub Actions produces both installers and the checksum file in a draft release.
+- [x] Verify the draft release assets and checksums.
 - [ ] Publish the release.
 
 ## Unplanned
