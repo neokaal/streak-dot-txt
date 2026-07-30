@@ -7,7 +7,7 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   checks:
@@ -15,7 +15,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out the source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Install Linux desktop dependencies
         run: |
@@ -27,7 +29,7 @@ jobs:
             patchelf
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.13"
           cache: pip
@@ -36,14 +38,14 @@ jobs:
             requirements*.txt
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24"
           cache: npm
           cache-dependency-path: desktop/package-lock.json
 
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
 
       - name: Verify the tag matches the application version
         if: github.event_name == 'push'
@@ -80,10 +82,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out the source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.13"
           cache: pip
@@ -93,14 +97,14 @@ jobs:
             requirements.txt
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24"
           cache: npm
           cache-dependency-path: desktop/package-lock.json
 
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
 
       - name: Confirm the native runner architecture
         shell: bash
@@ -117,51 +121,46 @@ jobs:
       - name: Build and stage the native sidecar
         run: python desktop/package_release.py --prepare-sidecar
 
-      - name: Build the installer for manual verification
-        if: github.event_name == 'workflow_dispatch'
+      - name: Build the installer
         working-directory: desktop
         env:
           CI: "true"
         run: npm run tauri -- build --bundles ${{ matrix.bundle }}
 
-      - name: Store the installer for manual verification
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v7
+      - name: Store the installer
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: streak-txt-${{ matrix.artifact }}
           path: ${{ matrix.artifactPath }}
           if-no-files-found: error
           retention-days: 7
 
-      - name: Build and upload the release installer
-        if: github.event_name == 'push'
-        uses: tauri-apps/tauri-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          projectPath: desktop
-          tagName: ${{ github.ref_name }}
-          releaseName: Streak.txt ${{ github.ref_name }}
-          releaseBody: See CHANGELOG.md for the changes in this release.
-          releaseDraft: true
-          prerelease: false
-          args: --bundles ${{ matrix.bundle }}
-
-  checksums:
-    name: Publish checksums
+  publish:
+    name: Create draft release
     if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-22.04
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
     steps:
-      - name: Download the draft release assets
-        run: gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir release-assets
+      - name: Download the verified installers
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          path: release-assets
+          merge-multiple: true
 
       - name: Generate SHA-256 checksums
         run: |
           cd release-assets
           sha256sum * > ../SHA256SUMS.txt
+          mv ../SHA256SUMS.txt .
 
-      - name: Upload the checksum file
-        run: gh release upload "$GITHUB_REF_NAME" SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" release-assets/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft \
+            --title "Streak.txt $GITHUB_REF_NAME" \
+            --notes "See CHANGELOG.md for the changes in this release."

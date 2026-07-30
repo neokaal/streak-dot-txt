@@ -10,6 +10,8 @@ checked here until they are moved into release notes or archived.
 
 - [x] Update the local Git remote from the personal repository to `neokaal/streak-dot-txt`.
 - [x] Update repository, release-download, and GitHub Pages links to their new NeokaaL locations.
+- [x] Restrict GitHub Actions write access to release-publishing jobs and pin every action to an immutable commit.
+- [x] Configure Dependabot to propose reviewed updates for pinned GitHub Actions.
 
 ## v0.1.0 - Hearth Pheasant
 
