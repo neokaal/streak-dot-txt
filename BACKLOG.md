@@ -26,7 +26,7 @@ checked here until they are moved into release notes or archived.
 - [x] Push the release commit and create the matching version tag.
 - [x] Confirm GitHub Actions produces both installers and the checksum file in a draft release.
 - [x] Verify the draft release assets and checksums.
-- [ ] Publish the release.
+- [x] Publish the release.
 
 ## Unplanned
 
