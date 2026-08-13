@@ -19,7 +19,8 @@ function tests.test_repository_crud()
     local loaded, load_err = repo.load_streak(tmp_dir, "morning-walk")
     if not loaded then
         print("DEBUG: load failed, dir contents:")
-        local p = io.popen('ls -la "' .. tmp_dir .. '"')
+        local cmd = (package.config:sub(1,1) == "\\") and ('dir "' .. tmp_dir:gsub("/", "\\") .. '"') or ('ls -la "' .. tmp_dir .. '"')
+        local p = io.popen(cmd)
         if p then print(p:read("*a")); p:close() end
     end
     assert(loaded ~= nil, "loaded streak found: " .. tostring(load_err))
@@ -43,7 +44,11 @@ function tests.test_repository_crud()
     assert(archived_load == nil, "archived streak no longer in main list")
 
     -- Clean up test directory
-    os.execute('rm -rf "' .. tmp_dir .. '"')
+    if package.config:sub(1,1) == "\\" then
+        os.execute('rmdir /s /q "' .. tmp_dir:gsub("/", "\\") .. '" 2>nul')
+    else
+        os.execute('rm -rf "' .. tmp_dir .. '" 2>/dev/null')
+    end
 end
 
 return tests

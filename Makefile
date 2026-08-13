@@ -1,4 +1,4 @@
-PYTHON ?= .env/bin/python
+PYTHON ?= $(firstword $(wildcard .env/Scripts/python.exe .env/bin/python) python)
 NPM ?= npm
 CARGO ?= cargo
 TAURI_DIR := desktop/src-tauri
@@ -61,8 +61,10 @@ run-desktop:
 
 test: test-lua test-rust
 
+LUA ?= $(firstword $(wildcard .luaenv/bin/lua.exe .luaenv/bin/lua /opt/homebrew/bin/lua) lua)
+
 test-lua:
-	/opt/homebrew/bin/lua -E spec/test_runner.lua
+	$(LUA) -E spec/test_runner.lua
 
 test-python:
 	$(PYTHON) -m pytest -q

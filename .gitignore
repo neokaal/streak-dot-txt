@@ -183,3 +183,9 @@ desktop/*.spec
 
 # ignore tauri generated files
 desktop/src-tauri/gen/
+
+# lua env
+.luaenv/
+
+# temp files
+.test_tmp/

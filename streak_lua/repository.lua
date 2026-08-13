@@ -20,7 +20,8 @@ end
 function repo.ensure_dir(dir)
     dir = dir or repo.get_default_dir()
     if os.name == "nt" or package.config:sub(1,1) == "\\" then
-        os.execute('mkdir "' .. dir .. '" 2>nul')
+        local win_dir = dir:gsub("/", "\\")
+        os.execute('mkdir "' .. win_dir .. '" 2>nul')
     else
         os.execute('mkdir -p "' .. dir .. '" 2>/dev/null')
     end
@@ -44,6 +45,11 @@ function repo.write_file_atomic(path, content)
     f:close()
 
     local ok, ren_err = os.rename(tmp_path, path)
+    if not ok then
+        -- On Windows C runtime, rename fails if target file already exists
+        os.remove(path)
+        ok, ren_err = os.rename(tmp_path, path)
+    end
     if not ok then
         -- Fallback: try copy/remove if cross-device rename fails
         local rf = io.open(tmp_path, "r")
@@ -115,14 +121,18 @@ function repo.list_directory_files(dir)
     local files = {}
     local p
     if os.name == "nt" or package.config:sub(1,1) == "\\" then
-        p = io.popen('dir /b "' .. search_dir .. '" 2>nul')
+        local win_dir = search_dir:gsub("/", "\\")
+        p = io.popen('dir /b "' .. win_dir .. '" 2>nul')
     else
         p = io.popen('ls -1 "' .. search_dir .. '" 2>/dev/null')
     end
 
     if p then
         for line in p:lines() do
-            table.insert(files, line)
+            line = line:gsub("[\r\n]", "")
+            if line ~= "" then
+                table.insert(files, line)
+            end
         end
         p:close()
     end
@@ -300,6 +310,10 @@ function repo.archive_streak(dir, id_or_name)
     end
 
     local ok, err = os.rename(src_path, dest_path)
+    if not ok then
+        os.remove(dest_path)
+        ok, err = os.rename(src_path, dest_path)
+    end
     if not ok then
         -- Fallback copy and delete
         local content = repo.read_file(src_path)
