@@ -59,7 +59,10 @@ run-api:
 run-desktop:
 	$(PYTHON) desktop/run_local.py
 
-test: test-python test-rust
+test: test-lua test-rust
+
+test-lua:
+	/opt/homebrew/bin/lua -E spec/test_runner.lua
 
 test-python:
 	$(PYTHON) -m pytest -q

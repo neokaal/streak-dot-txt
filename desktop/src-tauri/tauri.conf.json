@@ -4,10 +4,10 @@
   "version": "0.1.1",
   "identifier": "in.neolateral.streaktxt",
   "build": {
-    "frontendDist": "../web-shell",
-    "devUrl": "http://127.0.0.1:8000"
+    "frontendDist": "../web-shell"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "Streak.txt",
@@ -31,9 +31,6 @@
     "macOS": {
       "minimumSystemVersion": "11.0",
       "signingIdentity": "-"
-    },
-    "resources": {
-      "resources/sidecar/": "sidecar/"
     }
   }
 }
