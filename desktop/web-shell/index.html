@@ -1,16 +1,160 @@
 <!doctype html>
 <html lang="en">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Streak.txt</title>
-<style>body{font:16px system-ui,sans-serif;color:#1e2922;background:#f5f3eb;margin:0;padding:28px}p{color:#657069;max-width:42rem}.error{color:#8b2f2f;white-space:pre-wrap}</style>
-<h1>Starting Streak.txt…</h1>
-<p id="status">Preparing your local streaks. The first launch after installation can take a little longer.</p>
-<script>
-  window.__streakStartupFailed = function (message) {
-    const status = document.getElementById("status");
-    status.className = "error";
-    status.textContent = message;
-  };
-</script>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Streak.txt</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div class="app-title">
+        <span aria-hidden="true">■</span>
+        <h1>Streak.txt</h1>
+      </div>
+      <p class="today"><strong>Today</strong> <time id="today-date"></time></p>
+      <div class="header-actions">
+        <p class="header-summary"><strong id="streak-count">0</strong> streaks</p>
+        <button type="button" aria-haspopup="dialog" onclick="document.getElementById('create-streak-dialog').showModal()">New streak…</button>
+      </div>
+    </header>
+
+    <section class="switchboard-panel" aria-labelledby="streaks-heading">
+      <div class="panel-heading">
+        <h2 id="streaks-heading">Today’s switchboard</h2>
+        <span>Press Tick after completing a streak</span>
+      </div>
+      <div class="switchboard" role="list" id="switchboard">
+      </div>
+    </section>
+
+    <footer class="status-bar">
+      <span>Ready</span>
+      <span id="control-count">0 controls</span>
+    </footer>
+  </main>
+
+  <dialog id="create-streak-dialog" aria-labelledby="create-streak-title">
+    <form id="form-create-streak" onsubmit="handleCreateStreak(event)">
+      <div class="dialog-title">
+        <h2 id="create-streak-title">Create streak</h2>
+        <button type="button" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
+      </div>
+      <div class="dialog-body">
+        <label>Name <input required autofocus id="input-streak-name" name="name" placeholder="Morning walk"></label>
+        <label>Cadence <select id="input-streak-cadence" name="tick_type"><option>Daily</option><option>Weekly</option></select></label>
+        <label>Description <input name="description" placeholder="Optional"></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+        <button type="submit">Create</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    function getInvoke() {
+      if (window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke) {
+        return window.__TAURI__.core.invoke;
+      }
+      if (window.__TAURI__ && window.__TAURI__.invoke) {
+        return window.__TAURI__.invoke;
+      }
+      if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke) {
+        return window.__TAURI_INTERNALS__.invoke;
+      }
+      console.warn("Tauri invoke API not found");
+      return null;
+    }
+
+    // Set today date
+    const today = new Date();
+    document.getElementById('today-date').textContent = today.toLocaleDateString('en-US', {
+      weekday: 'short', day: '2-digit', month: 'short'
+    });
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escapeJs(str) {
+      return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function renderSwitchboard(streaks) {
+      const container = document.getElementById('switchboard');
+      const count = streaks.length;
+      document.getElementById('streak-count').textContent = count;
+      document.getElementById('control-count').textContent = `${count} control${count !== 1 ? 's' : ''}`;
+
+      if (count === 0) {
+        container.innerHTML = `<p class="empty">No streaks yet. Start with one small practice.</p>`;
+        return;
+      }
+
+      container.innerHTML = streaks.map(s => {
+        const isDone = s.ticked_today;
+        const ratePct = Math.round((s.completion_rate || 0) * 100);
+        return `
+          <article class="streak-control${isDone ? ' is-done' : ''}" id="streak-${escapeHtml(s.id)}" role="listitem">
+            <header class="control-heading">
+              <h3 title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</h3>
+              <span>${escapeHtml(s.tick || 'Daily')}</span>
+            </header>
+            <dl aria-label="Streak statistics">
+              <div><dt>Now</dt><dd>${s.current_streak}</dd></div>
+              <div><dt>Best</dt><dd>${s.longest_streak}</dd></div>
+              <div><dt>Rate</dt><dd>${ratePct}%</dd></div>
+            </dl>
+            <button class="tick-button" aria-pressed="${isDone ? 'true' : 'false'}" ${isDone ? 'disabled' : ''} onclick="tickStreak('${escapeJs(s.id)}')">
+              ${isDone ? '✓ Done' : '+ Tick'}
+            </button>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function loadStreaks() {
+      const invoke = getInvoke();
+      if (!invoke) return;
+      try {
+        const rawJson = await invoke('list_streaks');
+        const data = JSON.parse(rawJson || '{"streaks":[]}');
+        renderSwitchboard(data.streaks || []);
+      } catch (err) {
+        console.error('Failed to load streaks:', err);
+      }
+    }
+
+    async function tickStreak(id) {
+      const invoke = getInvoke();
+      if (!invoke) return;
+      try {
+        await invoke('tick_streak', { id });
+        loadStreaks();
+      } catch (err) {
+        alert('Failed to tick streak: ' + err);
+      }
+    }
+
+    async function handleCreateStreak(event) {
+      event.preventDefault();
+      const invoke = getInvoke();
+      if (!invoke) return;
+      const name = document.getElementById('input-streak-name').value.trim();
+      if (!name) return;
+      try {
+        await invoke('create_streak', { name });
+        document.getElementById('create-streak-dialog').close();
+        document.getElementById('input-streak-name').value = '';
+        loadStreaks();
+      } catch (err) {
+        alert('Failed to create streak: ' + err);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadStreaks);
+  </script>
+</body>
 </html>

@@ -6,26 +6,13 @@ import argparse
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
-try:
-    from .package_sidecar import DESKTOP_DIR, build_sidecar
-except ImportError:
-    from package_sidecar import DESKTOP_DIR, build_sidecar
-
-
-def prepare_sidecar_resource() -> Path:
-    sidecar = build_sidecar()
-    destination = DESKTOP_DIR / "src-tauri" / "resources" / "sidecar"
-    if destination.exists():
-        shutil.rmtree(destination)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(sidecar.parent, destination)
-    return destination
+DESKTOP_DIR = Path(__file__).resolve().parent
 
 
 def build_release(bundles: str | None = None) -> None:
-    prepare_sidecar_resource()
     npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
     if not npm:
         raise RuntimeError("npm is required to build the Tauri bundle")
@@ -48,16 +35,8 @@ def main() -> None:
         "--bundles",
         help="Tauri bundle list, for example app or app,dmg",
     )
-    parser.add_argument(
-        "--prepare-sidecar",
-        action="store_true",
-        help="Build and stage the native sidecar without invoking Tauri",
-    )
     arguments = parser.parse_args()
-    if arguments.prepare_sidecar:
-        prepare_sidecar_resource()
-    else:
-        build_release(arguments.bundles)
+    build_release(arguments.bundles)
 
 
 if __name__ == "__main__":
