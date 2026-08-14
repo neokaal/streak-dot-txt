@@ -66,7 +66,12 @@ LUA ?= $(firstword $(wildcard .luaenv/bin/lua.exe .luaenv/bin/lua /opt/homebrew/
 test-lua:
 	$(LUA) -E spec/test_runner.lua
 
-test-rust:
+fetch-sources:
+	$(PYTHON) scripts/fetch_sources.py
+
+fetch-lua: fetch-sources
+
+test-rust: fetch-sources
 	cd $(TAURI_DIR) && $(CARGO) test
 
 check: test
@@ -74,7 +79,7 @@ check: test
 	cd $(TAURI_DIR) && $(CARGO) fmt --check
 	cd $(TAURI_DIR) && $(CARGO) check --release
 
-build:
+build: fetch-sources
 	cd $(TAURI_DIR) && $(CARGO) build --release
 
 build-sidecar:

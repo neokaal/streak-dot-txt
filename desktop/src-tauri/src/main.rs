@@ -13,8 +13,21 @@ const LUA_JSON: &str = include_str!("../../../streak_lua/json.lua");
 const LUA_CORE: &str = include_str!("../../../streak_lua/core.lua");
 const LUA_REPO: &str = include_str!("../../../streak_lua/repository.lua");
 
+extern "C" {
+    fn luaopen_lfs(L: *mut std::ffi::c_void) -> std::os::raw::c_int;
+}
+
 fn init_lua() -> Result<Lua, Box<dyn std::error::Error>> {
     let lua = Lua::new();
+
+    // Register statically linked lfs C module into package.preload["lfs"]
+    unsafe {
+        let lfs_fn: mlua::ffi::lua_CFunction = std::mem::transmute(luaopen_lfs as *const ());
+        let lfs_c_func = lua.create_c_function(lfs_fn)?;
+        let package: mlua::Table = lua.globals().get("package")?;
+        let preload: mlua::Table = package.get("preload")?;
+        preload.set("lfs", lfs_c_func)?;
+    }
 
     // Register embedded modules in package.loaded
     lua.load(format!(
@@ -136,5 +149,15 @@ mod tests {
             .eval()
             .expect("eval slugify");
         assert_eq!(eval_res, "morning-walk");
+    }
+
+    #[test]
+    fn test_lfs_integration() {
+        let lua = init_lua().expect("init_lua should succeed");
+        let lfs_version: String = lua
+            .load("local lfs = require('lfs'); return lfs._VERSION")
+            .eval()
+            .expect("eval lfs._VERSION");
+        assert!(lfs_version.contains("LuaFileSystem"));
     }
 }

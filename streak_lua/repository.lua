@@ -3,6 +3,7 @@
 
 local json = require("streak_lua.json")
 local core = require("streak_lua.core")
+local lfs = require("lfs")
 
 local repo = {}
 
@@ -16,14 +17,29 @@ function repo.get_default_dir()
     return home .. "/streaks"
 end
 
--- Ensure directory exists
+-- Ensure directory exists recursively using pure LuaFileSystem
 function repo.ensure_dir(dir)
     dir = dir or repo.get_default_dir()
-    if os.name == "nt" or package.config:sub(1,1) == "\\" then
-        local win_dir = dir:gsub("/", "\\")
-        os.execute('mkdir "' .. win_dir .. '" 2>nul')
-    else
-        os.execute('mkdir -p "' .. dir .. '" 2>/dev/null')
+    local norm_dir = dir:gsub("\\", "/")
+    local prefix = ""
+    if norm_dir:match("^%a:") then
+        prefix = norm_dir:sub(1, 2)
+        norm_dir = norm_dir:sub(3)
+    elseif norm_dir:sub(1, 1) == "/" then
+        prefix = "/"
+        norm_dir = norm_dir:sub(2)
+    end
+
+    local current = prefix
+    for part in norm_dir:gmatch("[^/]+") do
+        if current == "" or current == "/" or current:match("^%a:$") then
+            current = current .. part
+        else
+            current = current .. "/" .. part
+        end
+        if not lfs.attributes(current, "mode") then
+            lfs.mkdir(current)
+        end
     end
 end
 
@@ -112,30 +128,17 @@ function repo.save_config(dir, config)
     return repo.write_file_atomic(config_path, encoded)
 end
 
--- List directory files safely in pure Lua
+-- List directory files safely using pure LuaFileSystem
 function repo.list_directory_files(dir)
-    local search_dir = dir
-    if not search_dir:match("[/\\]$") then
-        search_dir = search_dir .. "/"
-    end
-
+    repo.ensure_dir(dir)
     local files = {}
-    local p
-    if os.name == "nt" or package.config:sub(1,1) == "\\" then
-        local win_dir = search_dir:gsub("/", "\\")
-        p = io.popen('dir /b "' .. win_dir .. '" 2>nul')
-    else
-        p = io.popen('ls -1 "' .. search_dir .. '" 2>/dev/null')
-    end
-
-    if p then
-        for l in p:lines() do
-            local clean_line = l:gsub("[\r\n]", "")
-            if clean_line ~= "" then
-                table.insert(files, clean_line)
+    local ok, iter, dir_obj = pcall(lfs.dir, dir)
+    if ok then
+        for file in iter, dir_obj do
+            if file ~= "." and file ~= ".." then
+                table.insert(files, file)
             end
         end
-        p:close()
     end
     return files
 end
