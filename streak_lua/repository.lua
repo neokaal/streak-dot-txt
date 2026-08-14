@@ -76,6 +76,7 @@ function repo.id_from_filename(filename)
     end
     local id = filename:match("^streak%-(.+)%.txt$")
     if id then return id end
+    -- Legacy filename fallback: strip .txt extension
     return filename:match("^(.+)%.txt$")
 end
 
@@ -128,10 +129,10 @@ function repo.list_directory_files(dir)
     end
 
     if p then
-        for line in p:lines() do
-            line = line:gsub("[\r\n]", "")
-            if line ~= "" then
-                table.insert(files, line)
+        for l in p:lines() do
+            local clean_line = l:gsub("[\r\n]", "")
+            if clean_line ~= "" then
+                table.insert(files, clean_line)
             end
         end
         p:close()
@@ -215,9 +216,17 @@ end
 function repo.load_streak(dir, id_or_name)
     dir = dir or repo.get_default_dir()
     repo.ensure_dir(dir)
-    local slug = core.slugify(id_or_name)
 
-    -- Check direct filename
+    -- First scan existing streaks in the directory to find an exact ID or display name match
+    local streaks = repo.list_streaks(dir)
+    local slug = core.slugify(id_or_name)
+    for _, s in ipairs(streaks) do
+        if s.id == slug or s.id == id_or_name or s.name:lower() == id_or_name:lower() then
+            return s
+        end
+    end
+
+    -- Check direct streak-<slug>.txt filename
     local path = dir .. "/streak-" .. slug .. ".txt"
     local content = repo.read_file(path)
     if content then
@@ -231,14 +240,6 @@ function repo.load_streak(dir, id_or_name)
         return core.parse_streak(content, slug)
     end
 
-    -- Scan directory for display name or ID match
-    local streaks = repo.list_streaks(dir)
-    for _, s in ipairs(streaks) do
-        if s.id == slug or s.name:lower() == id_or_name:lower() then
-            return s
-        end
-    end
-
     return nil
 end
 
@@ -246,7 +247,7 @@ end
 function repo.save_streak(dir, streak)
     dir = dir or repo.get_default_dir()
     repo.ensure_dir(dir)
-    local filename = "streak-" .. streak.id .. ".txt"
+    local filename = streak.filename or ("streak-" .. streak.id .. ".txt")
     local path = dir .. "/" .. filename
     local content = core.format_streak(streak)
     return repo.write_file_atomic(path, content)
@@ -254,7 +255,11 @@ end
 
 -- Tick or untick a streak for a given date (default today)
 function repo.tick_streak(dir, id_or_name, date_str)
-    date_str = date_str or core.format_date()
+    -- Normalize the target date to YYYY-MM-DD for toggling, while constructing the raw timestamp
+    local target_date = date_str or core.format_date()
+    local is_today = (date_str == nil)
+    local raw_timestamp = is_today and core.format_datetime() or target_date
+
     local streak = repo.load_streak(dir, id_or_name)
 
     if not streak then
@@ -266,25 +271,49 @@ function repo.tick_streak(dir, id_or_name, date_str)
             tick = "Daily",
             dates = {},
             date_set = {},
+            raw_lines = {},
         }
     end
 
+    streak.raw_lines = streak.raw_lines or {}
+
     -- Toggle or append date
-    if streak.date_set[date_str] then
-        -- Untick (remove date)
-        streak.date_set[date_str] = nil
+    if streak.date_set[target_date] then
+        -- Untick (remove date and its corresponding raw line)
+        streak.date_set[target_date] = nil
         local new_dates = {}
         for _, d in ipairs(streak.dates) do
-            if d ~= date_str then
+            if d ~= target_date then
                 table.insert(new_dates, d)
             end
         end
         streak.dates = new_dates
+
+        local new_raw_lines = {}
+        for _, rl in ipairs(streak.raw_lines) do
+            if rl.date ~= target_date then
+                table.insert(new_raw_lines, rl)
+            end
+        end
+        streak.raw_lines = new_raw_lines
     else
         -- Tick (add date)
-        streak.date_set[date_str] = true
-        table.insert(streak.dates, date_str)
+        streak.date_set[target_date] = true
+        table.insert(streak.dates, target_date)
         table.sort(streak.dates)
+
+        -- Insert or update in raw_lines
+        local found = false
+        for _, rl in ipairs(streak.raw_lines) do
+            if rl.date == target_date then
+                rl.line = raw_timestamp
+                found = true
+                break
+            end
+        end
+        if not found then
+            table.insert(streak.raw_lines, { date = target_date, line = raw_timestamp })
+        end
     end
 
     repo.save_streak(dir, streak)

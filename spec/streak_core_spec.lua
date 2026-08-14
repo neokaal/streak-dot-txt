@@ -57,4 +57,33 @@ function tests.test_json_encoder()
     assert(decoded.items[1] == "a", "json array item")
 end
 
+function tests.test_timestamp_preservation()
+    -- Sample raw streak content matching user format with timestamps
+    local raw = "---\nname: Business Updates\ntick: Daily\n---\n2025-01-07\n2025-01-09T09:37:44.377302\n2025-01-10T16:44:14.656836\n"
+    local streak = core.parse_streak(raw, "business-updates")
+
+    assert(#streak.dates == 3, "parsed 3 dates")
+    assert(streak.date_set["2025-01-07"] == true, "has date 1")
+    assert(streak.date_set["2025-01-09"] == true, "has date 2")
+    assert(streak.date_set["2025-01-10"] == true, "has date 3")
+
+    -- Format back without changes and ensure original formatting is preserved 100%
+    local formatted = core.format_streak(streak)
+    assert(formatted:find("2025-01-09T09:37:44.377302", 1, true) ~= nil, "timestamp preserved")
+    assert(formatted:find("2025-01-10T16:44:14.656836", 1, true) ~= nil, "timestamp preserved")
+    assert(formatted:find("2025-01-07", 1, true) ~= nil, "simple date preserved")
+
+    -- Now tick a new date "2025-01-11"
+    -- Since we aren't calling tick_streak directly in this core test, let's update model state like repo.tick_streak does
+    local target_date = "2025-01-11"
+    streak.date_set[target_date] = true
+    table.insert(streak.dates, target_date)
+    table.insert(streak.raw_lines, { date = target_date, line = target_date })
+
+    local formatted_ticked = core.format_streak(streak)
+    assert(formatted_ticked:find("2025-01-09T09:37:44.377302", 1, true) ~= nil, "timestamp preserved after tick")
+    assert(formatted_ticked:find("2025-01-10T16:44:14.656836", 1, true) ~= nil, "timestamp preserved after tick")
+    assert(formatted_ticked:find("2025-01-11", 1, true) ~= nil, "new tick line added")
+end
+
 return tests

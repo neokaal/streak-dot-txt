@@ -28,12 +28,20 @@ function core.format_date(time_sec)
     return os.date("!%Y-%m-%d", time_sec)
 end
 
+-- Format full local ISO 8601 timestamp (e.g. 2025-01-09T09:37:44.377302 or simply 2025-01-09T09:37:44)
+function core.format_datetime(time_sec)
+    time_sec = time_sec or os.time()
+    -- Format local date and time: YYYY-MM-DDT%H:%M:%S
+    return os.date("%Y-%m-%dT%H:%M:%S", time_sec)
+end
+
 -- Parse streak file content
 function core.parse_streak(content, id)
     local name = id
     local tick = "Daily"
     local dates = {}
     local date_set = {}
+    local raw_lines = {}
 
     local fm_content = content:match("^%-%-%-\r?\n(.-)\r?\n%-%-%-")
     if fm_content then
@@ -68,6 +76,7 @@ function core.parse_streak(content, id)
             if not date_set[date_str] then
                 date_set[date_str] = true
                 table.insert(dates, date_str)
+                table.insert(raw_lines, { date = date_str, line = trimmed })
             end
         end
     end
@@ -80,6 +89,7 @@ function core.parse_streak(content, id)
         tick = tick,
         dates = dates,
         date_set = date_set,
+        raw_lines = raw_lines,
     }
 end
 
@@ -91,9 +101,21 @@ function core.format_streak(streak)
         "tick: " .. (streak.tick or "Daily"),
         "---",
     }
+    
+    -- Ensure raw_lines is populated if we are formatting a newly created streak or a mutated streak
+    local raw_lines = streak.raw_lines or {}
+    local raw_map = {}
+    for _, item in ipairs(raw_lines) do
+        raw_map[item.date] = item.line
+    end
+
+    -- Update or add any newly added dates
     table.sort(streak.dates)
     for _, d in ipairs(streak.dates) do
-        table.insert(lines, d)
+        if streak.date_set[d] then
+            local line_val = raw_map[d] or d
+            table.insert(lines, line_val)
+        end
     end
     return table.concat(lines, "\n") .. "\n"
 end
