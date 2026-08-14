@@ -66,26 +66,15 @@ LUA ?= $(firstword $(wildcard .luaenv/bin/lua.exe .luaenv/bin/lua /opt/homebrew/
 test-lua:
 	$(LUA) -E spec/test_runner.lua
 
-test-python:
-	$(PYTHON) -m pytest -q
-
 test-rust:
 	cd $(TAURI_DIR) && $(CARGO) test
 
 check: test
-	$(PYTHON) -m compileall -q streak_core streak_api desktop scripts tests streakdottxt.py streaksgui.py
-	$(PYTHON) -m pip check
 	cd desktop && $(NPM) ls --depth=0
 	cd $(TAURI_DIR) && $(CARGO) fmt --check
 	cd $(TAURI_DIR) && $(CARGO) check --release
 
-coverage:
-	$(PYTHON) -m coverage run -m pytest
-	$(PYTHON) -m coverage report
-	$(PYTHON) -m coverage html
-
 build:
-	$(PYTHON) -m compileall -q streak_core streak_api desktop streakdottxt.py
 	cd $(TAURI_DIR) && $(CARGO) build --release
 
 build-sidecar:
